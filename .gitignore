@@ -1,0 +1,56 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE
+.vscode/
+.idea/
+
+# Operating system
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Environment/configuration secrets
+.env
+.env.*
+!.env.example
+
+# Local project configuration
+local_config.*
+config.local.*
+
+# Build artifacts
+build/
+dist/
+
+# Python packaging
+*.egg-info/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Security-sensitive test output
+test_output/
+scan_results/
