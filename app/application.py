@@ -9,9 +9,11 @@ from scanner.event_queue import ScanEventQueue
 from scanner.file_filter import FileEligibilityFilter
 from scanner.file_reader import (FileReadStatus, SecureFileReader)
 from scanner.watcher import FileWatcher
-
 from scanner.patterns import (PatternRegistry, create_default_pattern_registry)
+
 from scanner.detector import RegexDetectionEngine
+from scanner.context import ContextDetectionEngine
+from scanner.entropy import EntropyEngine
 
 logger = logging.getLogger(__name__)
 
@@ -41,6 +43,8 @@ class SecurityAgentApplication:
 
         self._pattern_registry: PatternRegistry = (create_default_pattern_registry())
         self._detector = RegexDetectionEngine(pattern_registry=self._pattern_registry)
+        self._context_detector = ContextDetectionEngine()
+        self._entropy_engine = EntropyEngine()
 
 
     # Called by the filesystem watcher and passes the event to the debounce layer.
@@ -83,6 +87,21 @@ class SecurityAgentApplication:
                 len(regex_matches),
             )
 
+            for regex_match in regex_matches:
+                context_result = self._context_detector.detect(content=result.content, regex_match=regex_match)
+                entropy_result = self._entropy_engine.calculate(context_result.candidate_value)
+
+                logger.info(
+                    "Detection evidence: %s | line=%d | "
+                    "context_score=%.2f | entropy=%.2f | "
+                    "high_entropy=%s",
+                    regex_match.pattern_id,
+                    regex_match.line_number,
+                    context_result.contextual_score,
+                    entropy_result.entropy_bits_per_character,
+                    entropy_result.is_high_entropy,
+                )
+
         finally:
             self._event_queue.task_done()
 
@@ -115,3 +134,11 @@ class SecurityAgentApplication:
     @property
     def detector(self) -> RegexDetectionEngine:
         return self._detector
+
+    @property
+    def context_detector(self) -> ContextDetectionEngine:
+        return self._context_detector
+
+    @property
+    def entropy_engine(self) -> EntropyEngine:
+        return self._entropy_engine
