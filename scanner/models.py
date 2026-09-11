@@ -60,3 +60,46 @@ class SecretPattern:
 
         if not 0.0 <= self.base_confidence <= 1.0:
             raise ValueError("base_confidence must be between 0.0 and 1.0.")
+
+
+class ConfidenceLevel:
+    """
+    Human-readable confidence classification.
+    """
+
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    CRITICAL = "critical"
+
+
+@dataclass(frozen=True, slots=True)
+class ConfidenceScore:
+    """
+    Result produced by the confidence scoring engine.
+    """
+
+    confidence: float
+    level: str
+
+    regex_score: float
+    context_score: float
+    entropy_score: float
+
+    is_placeholder: bool
+    is_comment: bool
+
+    severity: SecretSeverity
+
+    def __post_init__(self) -> None:
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError("confidence must be between 0.0 and 1.0.")
+
+        if not 0.0 <= self.regex_score <= 1.0:
+            raise ValueError("regex_score must be between 0.0 and 1.0.")
+
+        if not 0.0 <= self.context_score <= 1.0:
+            raise ValueError("context_score must be between 0.0 and 1.0.")
+
+        if not 0.0 <= self.entropy_score <= 1.0:
+            raise ValueError("entropy_score must be between 0.0 and 1.0.")

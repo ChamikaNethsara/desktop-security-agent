@@ -14,6 +14,7 @@ from scanner.patterns import (PatternRegistry, create_default_pattern_registry)
 from scanner.detector import RegexDetectionEngine
 from scanner.context import ContextDetectionEngine
 from scanner.entropy import EntropyEngine
+from scanner.scorer import ConfidenceScoringEngine
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +46,7 @@ class SecurityAgentApplication:
         self._detector = RegexDetectionEngine(pattern_registry=self._pattern_registry)
         self._context_detector = ContextDetectionEngine()
         self._entropy_engine = EntropyEngine()
+        self._scorer = ConfidenceScoringEngine()
 
 
     # Called by the filesystem watcher and passes the event to the debounce layer.
@@ -90,16 +92,29 @@ class SecurityAgentApplication:
             for regex_match in regex_matches:
                 context_result = self._context_detector.detect(content=result.content, regex_match=regex_match)
                 entropy_result = self._entropy_engine.calculate(context_result.candidate_value)
+                pattern = self._pattern_registry.get(regex_match.pattern_id)
+
+                confidence_result = self._scorer.score(
+                    pattern=pattern,
+                    context_result=context_result,
+                    entropy_result=entropy_result,
+                )
 
                 logger.info(
-                    "Detection evidence: %s | line=%d | "
-                    "context_score=%.2f | entropy=%.2f | "
-                    "high_entropy=%s",
+                    "Detection assessment: %s | line=%d | "
+                    "confidence=%.2f | level=%s | severity=%s | "
+                    "regex=%.2f | context=%.2f | entropy=%.2f | "
+                    "placeholder=%s | comment=%s",
                     regex_match.pattern_id,
                     regex_match.line_number,
-                    context_result.contextual_score,
-                    entropy_result.entropy_bits_per_character,
-                    entropy_result.is_high_entropy,
+                    confidence_result.confidence,
+                    confidence_result.level,
+                    confidence_result.severity.value,
+                    confidence_result.regex_score,
+                    confidence_result.context_score,
+                    confidence_result.entropy_score,
+                    confidence_result.is_placeholder,
+                    confidence_result.is_comment,
                 )
 
         finally:
@@ -142,3 +157,7 @@ class SecurityAgentApplication:
     @property
     def entropy_engine(self) -> EntropyEngine:
         return self._entropy_engine
+
+    @property
+    def scorer(self) -> ConfidenceScoringEngine:
+        return self._scorer
