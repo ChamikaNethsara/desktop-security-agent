@@ -10,6 +10,8 @@ from scanner.file_filter import FileEligibilityFilter
 from scanner.file_reader import (FileReadStatus, SecureFileReader)
 from scanner.watcher import FileWatcher
 
+from scanner.patterns import (PatternRegistry, create_default_pattern_registry)
+
 logger = logging.getLogger(__name__)
 
 
@@ -35,6 +37,8 @@ class SecurityAgentApplication:
 
         for directory in self._monitored_directories:
             self._watcher.add_directory(directory)
+
+        self._pattern_registry: PatternRegistry = (create_default_pattern_registry())
 
 
     # Called by the filesystem watcher and passes the event to the debounce layer.
@@ -93,3 +97,7 @@ class SecurityAgentApplication:
     @property
     def event_queue(self) -> ScanEventQueue:
         return self._event_queue
+
+    @property
+    def pattern_registry(self) -> PatternRegistry:
+        return self._pattern_registry
