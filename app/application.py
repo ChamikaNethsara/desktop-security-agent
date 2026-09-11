@@ -15,6 +15,7 @@ from scanner.detector import RegexDetectionEngine
 from scanner.context import ContextDetectionEngine
 from scanner.entropy import EntropyEngine
 from scanner.scorer import ConfidenceScoringEngine
+from scanner.models import SecretFinding
 
 logger = logging.getLogger(__name__)
 
@@ -100,6 +101,7 @@ class SecurityAgentApplication:
                     entropy_result=entropy_result,
                 )
 
+                '''
                 logger.info(
                     "Detection assessment: %s | line=%d | "
                     "confidence=%.2f | level=%s | severity=%s | "
@@ -115,6 +117,34 @@ class SecurityAgentApplication:
                     confidence_result.entropy_score,
                     confidence_result.is_placeholder,
                     confidence_result.is_comment,
+                )
+                '''
+
+                finding = SecretFinding(
+                    file_path=result.path,
+                    line_number=regex_match.line_number,
+                    pattern_id=pattern.definition.pattern_id,
+                    pattern_name=pattern.definition.name,
+                    category=pattern.definition.category,
+                    severity=confidence_result.severity,
+                    confidence=confidence_result.confidence,
+                    confidence_level=confidence_result.level,
+                    regex_score=confidence_result.regex_score,
+                    context_score=confidence_result.context_score,
+                    entropy_score=confidence_result.entropy_score,
+                    is_placeholder=confidence_result.is_placeholder,
+                    is_comment=confidence_result.is_comment,
+                    description=pattern.definition.description,
+                )
+
+                logger.info(
+                    "Secret finding created: %s | line=%d | "
+                    "confidence=%.2f | level=%s | severity=%s",
+                    finding.pattern_id,
+                    finding.line_number,
+                    finding.confidence,
+                    finding.confidence_level,
+                    finding.severity.value,
                 )
 
         finally:

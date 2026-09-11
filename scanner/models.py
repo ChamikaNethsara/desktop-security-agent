@@ -1,7 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from enum import Enum
+from pathlib import Path
 
 
 class SecretCategory(str, Enum):
@@ -103,3 +105,57 @@ class ConfidenceScore:
 
         if not 0.0 <= self.entropy_score <= 1.0:
             raise ValueError("entropy_score must be between 0.0 and 1.0.")
+
+
+@dataclass(frozen=True, slots=True)
+class SecretFinding:
+    """
+    Normalized representation of a detected secret.
+    """
+
+    file_path: Path
+    line_number: int
+
+    pattern_id: str
+    pattern_name: str
+
+    category: SecretCategory
+    severity: SecretSeverity
+
+    confidence: float
+    confidence_level: ConfidenceLevel
+
+    regex_score: float
+    context_score: float
+    entropy_score: float
+
+    is_placeholder: bool
+    is_comment: bool
+
+    description: str = ""
+    detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+
+    def __post_init__(self) -> None:
+        if not self.pattern_id.strip():
+            raise ValueError("pattern_id cannot be empty.")
+
+        if not self.pattern_name.strip():
+            raise ValueError("pattern_name cannot be empty.")
+
+        if self.line_number < 1:
+            raise ValueError("line_number must be greater than or equal to 1.")
+
+        if not 0.0 <= self.confidence <= 1.0:
+            raise ValueError("confidence must be between 0.0 and 1.0.")
+
+        if not 0.0 <= self.regex_score <= 1.0:
+            raise ValueError("regex_score must be between 0.0 and 1.0.")
+
+        if not 0.0 <= self.context_score <= 1.0:
+            raise ValueError("context_score must be between 0.0 and 1.0.")
+
+        if not 0.0 <= self.entropy_score <= 1.0:
+            raise ValueError("entropy_score must be between 0.0 and 1.0.")
+
+        if not self.file_path:
+            raise ValueError("file_path cannot be empty.")
