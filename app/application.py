@@ -16,6 +16,7 @@ from scanner.context import ContextDetectionEngine
 from scanner.entropy import EntropyEngine
 from scanner.scorer import ConfidenceScoringEngine
 from scanner.models import SecretFinding
+from scanner.deduplicator import FindingDeduplicator
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ class SecurityAgentApplication:
         self._context_detector = ContextDetectionEngine()
         self._entropy_engine = EntropyEngine()
         self._scorer = ConfidenceScoringEngine()
+        self._deduplicator = FindingDeduplicator()
 
 
     # Called by the filesystem watcher and passes the event to the debounce layer.
@@ -137,6 +139,14 @@ class SecurityAgentApplication:
                     description=pattern.definition.description,
                 )
 
+                if self._deduplicator.is_duplicate(finding):
+                    logger.debug(
+                        "Duplicate finding suppressed: %s | line=%d",
+                        finding.pattern_id,
+                        finding.line_number,
+                    )
+                    continue
+
                 logger.info(
                     "Secret finding created: %s | line=%d | "
                     "confidence=%.2f | level=%s | severity=%s",
@@ -191,3 +201,7 @@ class SecurityAgentApplication:
     @property
     def scorer(self) -> ConfidenceScoringEngine:
         return self._scorer
+
+    @property
+    def deduplicator(self) -> FindingDeduplicator:
+        return self._deduplicator
