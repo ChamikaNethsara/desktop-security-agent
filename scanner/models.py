@@ -64,7 +64,7 @@ class SecretPattern:
             raise ValueError("base_confidence must be between 0.0 and 1.0.")
 
 
-class ConfidenceLevel:
+class ConfidenceLevel(str, Enum):
     """
     Human-readable confidence classification.
     """
@@ -82,7 +82,7 @@ class ConfidenceScore:
     """
 
     confidence: float
-    level: str
+    level: ConfidenceLevel
 
     regex_score: float
     context_score: float

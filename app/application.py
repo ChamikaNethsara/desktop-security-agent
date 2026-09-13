@@ -17,6 +17,7 @@ from scanner.entropy import EntropyEngine
 from scanner.scorer import ConfidenceScoringEngine
 from scanner.models import SecretFinding
 from scanner.deduplicator import FindingDeduplicator
+from storage.event_store import SQLiteEventStore
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +51,10 @@ class SecurityAgentApplication:
         self._entropy_engine = EntropyEngine()
         self._scorer = ConfidenceScoringEngine()
         self._deduplicator = FindingDeduplicator()
+
+        database_path = Path("data/security_agent.db")
+        database_path.parent.mkdir(parents=True, exist_ok=True)
+        self._event_store = SQLiteEventStore(database_path=database_path)
 
 
     # Called by the filesystem watcher and passes the event to the debounce layer.
@@ -112,7 +117,7 @@ class SecurityAgentApplication:
                     regex_match.pattern_id,
                     regex_match.line_number,
                     confidence_result.confidence,
-                    confidence_result.level,
+                    confidence_result.level.value,
                     confidence_result.severity.value,
                     confidence_result.regex_score,
                     confidence_result.context_score,
@@ -147,14 +152,18 @@ class SecurityAgentApplication:
                     )
                     continue
 
+                fingerprint = self._event_store.save(finding)
+
                 logger.info(
-                    "Secret finding created: %s | line=%d | "
-                    "confidence=%.2f | level=%s | severity=%s",
+                    "Secret finding persisted: %s | line=%d | "
+                    "confidence=%.2f | level=%s | severity=%s | "
+                    "fingerprint=%s",
                     finding.pattern_id,
                     finding.line_number,
                     finding.confidence,
-                    finding.confidence_level,
+                    finding.confidence_level.value,
                     finding.severity.value,
+                    fingerprint,
                 )
 
         finally:
@@ -174,6 +183,7 @@ class SecurityAgentApplication:
 
         self._debouncer.shutdown()
         self._watcher.stop()
+        self._event_store.close()
 
         logger.info("Desktop Security Agent stopped.")
 
@@ -205,3 +215,7 @@ class SecurityAgentApplication:
     @property
     def deduplicator(self) -> FindingDeduplicator:
         return self._deduplicator
+
+    @property
+    def event_store(self) -> SQLiteEventStore:
+        return self._event_store
