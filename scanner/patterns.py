@@ -3,8 +3,10 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 from typing import Iterable
+from pathlib import Path
 
 from scanner.models import (SecretCategory, SecretPattern, SecretSeverity)
+from config.rule_loader import RuleLoader
 
 
 @dataclass(frozen=True, slots=True)
@@ -166,5 +168,10 @@ BUILT_IN_PATTERNS: tuple[SecretPattern, ...] = (
 )
 
 # Create a registry containing the built-in detection rules.
-def create_default_pattern_registry() -> PatternRegistry:
-    return PatternRegistry(BUILT_IN_PATTERNS)
+def create_default_pattern_registry(rules_path: Path | None = None) -> PatternRegistry:
+    patterns = BUILT_IN_PATTERNS
+
+    if rules_path is not None:
+        patterns = RuleLoader(rules_path).load(built_in_patterns=patterns)
+
+    return PatternRegistry(patterns)

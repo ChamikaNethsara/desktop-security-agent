@@ -51,7 +51,8 @@ class SecurityAgentApplication:
         for directory in self._monitored_directories:
             self._watcher.add_directory(directory)
 
-        self._pattern_registry: PatternRegistry = (create_default_pattern_registry())
+        rules_path = Path("config/rules.yaml")
+        self._pattern_registry: PatternRegistry = (create_default_pattern_registry(rules_path=rules_path))
         self._detector = RegexDetectionEngine(pattern_registry=self._pattern_registry)
         self._context_detector = ContextDetectionEngine()
         self._entropy_engine = EntropyEngine()

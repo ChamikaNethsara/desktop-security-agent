@@ -1,0 +1,21 @@
+rules:
+
+  - pattern_id: aws_access_key_id
+    enabled: true
+    severity: high
+    base_confidence: 0.98
+
+  - pattern_id: github_personal_access_token
+    enabled: true
+    severity: high
+    base_confidence: 0.98
+
+  - pattern_id: private_key_pem
+    enabled: true
+    severity: critical
+    base_confidence: 0.99
+
+  - pattern_id: generic_password_assignment
+    enabled: true
+    severity: high
+    base_confidence: 0.75
