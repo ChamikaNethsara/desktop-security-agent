@@ -7,6 +7,7 @@ from config.default_config import (DEBOUNCE_DELAY_SECONDS)
 from scanner.debouncer import EventDebouncer
 from scanner.event_queue import ScanEventQueue
 from scanner.file_filter import FileEligibilityFilter
+from scanner.initial_scanner import InitialProjectScanner
 from scanner.file_reader import (FileReadStatus, SecureFileReader)
 from scanner.watcher import FileWatcher
 from scanner.patterns import (PatternRegistry, create_default_pattern_registry)
@@ -38,6 +39,11 @@ class SecurityAgentApplication:
 
         self._event_queue = ScanEventQueue()
         self._file_filter = FileEligibilityFilter(monitored_directories=self._monitored_directories)
+        self._initial_scanner = InitialProjectScanner(
+            monitored_directories=self._monitored_directories,
+            file_filter=self._file_filter,
+            event_queue=self._event_queue
+        )
         self._file_reader = SecureFileReader()
         self._debouncer = EventDebouncer(callback=self._handle_debounced_event, delay_seconds=DEBOUNCE_DELAY_SECONDS)
         self._watcher = FileWatcher(on_file_event=self._handle_file_event)
@@ -174,6 +180,7 @@ class SecurityAgentApplication:
         logger.info("Starting Desktop Security Agent...")
 
         self._watcher.start()
+        self._initial_scanner.scan()
 
         logger.info("Desktop Security Agent started.")
 
@@ -219,3 +226,7 @@ class SecurityAgentApplication:
     @property
     def event_store(self) -> SQLiteEventStore:
         return self._event_store
+
+    @property
+    def initial_scanner(self) -> InitialProjectScanner:
+        return self._initial_scanner
