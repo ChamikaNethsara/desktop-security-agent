@@ -4,6 +4,7 @@ import logging
 import os
 from pathlib import Path
 
+from config.default_config import EXCLUDED_DIRECTORIES
 from scanner.file_filter import FileEligibilityFilter
 from scanner.event_queue import ScanEventQueue
 
@@ -48,19 +49,7 @@ class InitialProjectScanner:
                 directories[:] = [
                     name
                     for name in directories
-                    if name not in {
-                        ".git",
-                        ".svn",
-                        ".hg",
-                        "node_modules",
-                        "venv",
-                        ".venv",
-                        "__pycache__",
-                        "build",
-                        "dist",
-                        ".idea",
-                        ".vscode",
-                    }
+                    if name not in EXCLUDED_DIRECTORIES
                 ]
 
                 for filename in filenames:
