@@ -172,6 +172,6 @@ def create_default_pattern_registry(rules_path: Path | None = None) -> PatternRe
     patterns = BUILT_IN_PATTERNS
 
     if rules_path is not None:
-        patterns = RuleLoader(rules_path).load(built_in_patterns=patterns)
+        patterns = RuleLoader(rules_path).load_patterns(built_in_patterns=patterns)
 
     return PatternRegistry(patterns)

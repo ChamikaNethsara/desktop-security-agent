@@ -1,3 +1,5 @@
+version: 1
+
 rules:
 
   - pattern_id: aws_access_key_id

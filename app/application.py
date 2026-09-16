@@ -3,9 +3,12 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from config.default_config import (DEBOUNCE_DELAY_SECONDS)
+from config.default_config import DEBOUNCE_DELAY_SECONDS
+from config.rule_loader import RuleLoader
+
 from scanner.debouncer import EventDebouncer
 from scanner.event_queue import ScanEventQueue
+from scanner.scan_config import FileScanConfig
 from scanner.file_filter import FileEligibilityFilter
 from scanner.initial_scanner import InitialProjectScanner
 from scanner.file_reader import (FileReadStatus, SecureFileReader)
@@ -38,12 +41,26 @@ class SecurityAgentApplication:
             raise ValueError("At least one monitored directory is required.")
 
         self._event_queue = ScanEventQueue()
-        self._file_filter = FileEligibilityFilter(monitored_directories=self._monitored_directories)
+
+        # -- Configuration
+        config_directory = (Path(__file__).resolve().parent.parent / "config")
+        pattern_rules_path = (config_directory / "pattern_rules.yaml")
+        file_rules_path = (config_directory / "file_rules.yaml")
+        self._file_scan_config = (RuleLoader(file_rules_path).load_file_rules())
+
+        # -- File filtering and initial scanning
+        self._file_filter = FileEligibilityFilter(
+            monitored_directories=self._monitored_directories, 
+            scan_config=self._file_scan_config
+        )
+
         self._initial_scanner = InitialProjectScanner(
             monitored_directories=self._monitored_directories,
             file_filter=self._file_filter,
             event_queue=self._event_queue
         )
+
+        # -- File monitoring
         self._file_reader = SecureFileReader()
         self._debouncer = EventDebouncer(callback=self._handle_debounced_event, delay_seconds=DEBOUNCE_DELAY_SECONDS)
         self._watcher = FileWatcher(on_file_event=self._handle_file_event)
@@ -51,14 +68,15 @@ class SecurityAgentApplication:
         for directory in self._monitored_directories:
             self._watcher.add_directory(directory)
 
-        rules_path = Path("config/rules.yaml")
-        self._pattern_registry: PatternRegistry = (create_default_pattern_registry(rules_path=rules_path))
+        # -- Detection pipeline
+        self._pattern_registry: PatternRegistry = (create_default_pattern_registry(rules_path=pattern_rules_path))
         self._detector = RegexDetectionEngine(pattern_registry=self._pattern_registry)
         self._context_detector = ContextDetectionEngine()
         self._entropy_engine = EntropyEngine()
         self._scorer = ConfidenceScoringEngine()
         self._deduplicator = FindingDeduplicator()
 
+        # -- Event storage
         database_path = Path("data/security_agent.db")
         database_path.parent.mkdir(parents=True, exist_ok=True)
         self._event_store = SQLiteEventStore(database_path=database_path)
@@ -231,3 +249,7 @@ class SecurityAgentApplication:
     @property
     def initial_scanner(self) -> InitialProjectScanner:
         return self._initial_scanner
+
+    @property
+    def file_scan_config(self) -> FileScanConfig:
+        return self._file_scan_config
