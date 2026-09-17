@@ -39,7 +39,7 @@ class RuleLoader:
     # Load pattern rules from pattern_rules.yaml.
     # Existing pattern IDs override built-ins and new pattern IDs are added as custom rules.
     def load_patterns(self, built_in_patterns: tuple[SecretPattern, ...]) -> tuple[SecretPattern, ...]:
-        configuration = self._load_yaml()
+        configuration = self._load_yaml(required=False)
         if configuration is None:
             return built_in_patterns
 
@@ -189,7 +189,7 @@ class RuleLoader:
     # -- File scanning rules
     # Load file and directory scanning rules from file_rules.yaml.
     def load_file_rules(self) -> FileScanConfig:
-        configuration = self._load_yaml()
+        configuration = self._load_yaml(required=True)
         if configuration is None:
             raise RuleConfigurationError("File scanning configuration cannot be empty.")
 
@@ -206,8 +206,10 @@ class RuleLoader:
 
     # -- YAML loading
     # Load and validate the YAML document.
-    def _load_yaml(self) -> dict[str, Any] | None:
+    def _load_yaml(self, *, required: bool) -> dict[str, Any] | None:
         if not self._configuration_path.exists():
+            if not required:
+                return None
             raise RuleConfigurationError(f"Configuration file not found: {self._configuration_path}")
 
         if not self._configuration_path.is_file():
