@@ -1,14 +1,18 @@
 from pathlib import Path
 
 from scanner.deduplicator import FindingDeduplicator
+from scanner.fingerprint import FindingFingerprintGenerator
 from scanner.models import (ConfidenceLevel, SecretCategory, SecretFinding, SecretSeverity)
 
+TEST_SECRET = "x9F!kP72@Qz#Lm91" 
+TEST_SECRET_HASH = FindingFingerprintGenerator.hash_secret(TEST_SECRET)
 
 def create_finding(
         *,
         path: str = "project/.env",
         line_number: int = 1,
-        pattern_id: str = "generic_password_assignment"
+        pattern_id: str = "generic_password_assignment",
+        secret_hash: str = TEST_SECRET_HASH
         ) -> SecretFinding:
 
     return SecretFinding(
@@ -25,6 +29,7 @@ def create_finding(
         entropy_score=1.00,
         is_placeholder=False,
         is_comment=False,
+        secret_hash=secret_hash
     )
 
 
@@ -58,6 +63,17 @@ def test_different_file_is_not_duplicate() -> None:
     finding_b = create_finding(path="project_b/.env")
 
     assert deduplicator.is_duplicate(finding_a) is False
+    assert deduplicator.is_duplicate(finding_b) is False
+
+def test_different_secret_is_not_duplicate() -> None: 
+    deduplicator = FindingDeduplicator() 
+    secret_hash_a = FindingFingerprintGenerator.hash_secret( "test-secret-a" ) 
+    secret_hash_b = FindingFingerprintGenerator.hash_secret( "test-secret-b" ) 
+
+    finding_a = create_finding(secret_hash=secret_hash_a) 
+    finding_b = create_finding(secret_hash=secret_hash_b) 
+
+    assert deduplicator.is_duplicate(finding_a) is False 
     assert deduplicator.is_duplicate(finding_b) is False
 
 

@@ -1,13 +1,17 @@
 from pathlib import Path
+from scanner.fingerprint import FindingFingerprintGenerator
 from scanner.models import (ConfidenceLevel, SecretCategory, SecretFinding, SecretSeverity)
 from storage.event_store import SQLiteEventStore
 
+TEST_SECRET = "x9F!kP72@Qz#Lm91" 
+TEST_SECRET_HASH = FindingFingerprintGenerator.hash_secret(TEST_SECRET)
 
 def create_finding(
         *,
         path: str = "project/.env",
         line_number: int = 1,
-        pattern_id: str = "generic_password_assignment"
+        pattern_id: str = "generic_password_assignment",
+        secret_hash: str = TEST_SECRET_HASH
         ) -> SecretFinding:
 
     return SecretFinding(
@@ -25,6 +29,7 @@ def create_finding(
         is_placeholder=False,
         is_comment=False,
         description="Test finding",
+        secret_hash=secret_hash
     )
 
 

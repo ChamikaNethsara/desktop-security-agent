@@ -3,13 +3,16 @@ from pathlib import Path
 from scanner.fingerprint import FindingFingerprintGenerator
 from scanner.models import (ConfidenceLevel, SecretCategory, SecretFinding, SecretSeverity)
 
+TEST_SECRET = "x9F!kP72@Qz#Lm91" 
+TEST_SECRET_HASH = FindingFingerprintGenerator.hash_secret(TEST_SECRET)
 
 def create_finding(
         *,
         path: str = "project/.env",
         line_number: int = 1,
         pattern_id: str = "generic_password_assignment",
-        confidence: float = 0.80
+        confidence: float = 0.80,
+        secret_hash: str = TEST_SECRET_HASH
         ) -> SecretFinding:
 
     return SecretFinding(
@@ -26,6 +29,7 @@ def create_finding(
         entropy_score=1.00,
         is_placeholder=False,
         is_comment=False,
+        secret_hash=secret_hash
     )
 
 
@@ -88,11 +92,21 @@ def test_confidence_does_not_change_fingerprint() -> None:
     assert fingerprint_a == fingerprint_b
 
 
-def test_fingerprint_does_not_depend_on_plaintext_secret() -> None:
-    finding_a = create_finding(confidence=0.70)
-    finding_b = create_finding(confidence=0.90)
+def test_missing_secret_hash_raises_error() -> None: 
+    finding = create_finding(secret_hash="") 
 
-    fingerprint_a = FindingFingerprintGenerator.generate(finding_a)
-    fingerprint_b = FindingFingerprintGenerator.generate(finding_b)
+    try: 
+        FindingFingerprintGenerator.generate(finding) 
+    except ValueError as exc: 
+        assert str(exc) == ( "secret_hash is required to generate a value-aware fingerprint." ) 
+    else: raise AssertionError( "Expected ValueError for missing secret_hash." )
 
-    assert fingerprint_a == fingerprint_b
+
+def test_invalid_secret_hash_raises_error() -> None: 
+    finding = create_finding(secret_hash="invalid-hash") 
+
+    try: 
+        FindingFingerprintGenerator.generate(finding) 
+    except ValueError as exc: 
+        assert str(exc) == ( "secret_hash must be a valid SHA-256 hexadecimal digest." ) 
+    else: raise AssertionError( "Expected ValueError for invalid secret_hash." )

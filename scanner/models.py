@@ -135,6 +135,9 @@ class SecretFinding:
     description: str = ""
     detected_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
 
+    # Temporary hash used only for fingerprint generation.
+    secret_hash: str = field(default="", repr=False, compare=False)
+
     def __post_init__(self) -> None:
         if not self.pattern_id.strip():
             raise ValueError("pattern_id cannot be empty.")

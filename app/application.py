@@ -20,6 +20,7 @@ from scanner.context import ContextDetectionEngine
 from scanner.entropy import EntropyEngine
 from scanner.scorer import ConfidenceScoringEngine
 from scanner.models import SecretFinding
+from scanner.fingerprint import FindingFingerprintGenerator
 from scanner.deduplicator import FindingDeduplicator
 from storage.event_store import SQLiteEventStore
 
@@ -124,7 +125,9 @@ class SecurityAgentApplication:
 
             for regex_match in regex_matches:
                 context_result = self._context_detector.detect(content=result.content, regex_match=regex_match)
-                entropy_result = self._entropy_engine.calculate(context_result.candidate_value)
+                candidate_value = context_result.candidate_value
+                entropy_result = self._entropy_engine.calculate(candidate_value)
+                secret_hash = FindingFingerprintGenerator.hash_secret(candidate_value)
                 pattern = self._pattern_registry.get(regex_match.pattern_id)
 
                 confidence_result = self._scorer.score(
@@ -167,6 +170,7 @@ class SecurityAgentApplication:
                     is_placeholder=confidence_result.is_placeholder,
                     is_comment=confidence_result.is_comment,
                     description=pattern.definition.description,
+                    secret_hash=secret_hash
                 )
 
                 if self._deduplicator.is_duplicate(finding):
