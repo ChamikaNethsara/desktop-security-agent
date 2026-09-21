@@ -43,8 +43,10 @@ class SecurityAgentApplication:
 
         self._event_queue = ScanEventQueue()
 
+        application_root = Path(__file__).resolve().parent.parent
+
         # -- Configuration
-        config_directory = (Path(__file__).resolve().parent.parent / "config")
+        config_directory = (application_root / "config")
         pattern_rules_path = (config_directory / "pattern_rules.yaml")
         file_rules_path = (config_directory / "file_rules.yaml")
         self._file_scan_config = (RuleLoader(file_rules_path).load_file_rules())
@@ -78,7 +80,7 @@ class SecurityAgentApplication:
         self._deduplicator = FindingDeduplicator()
 
         # -- Event storage
-        database_path = Path("data/security_agent.db")
+        database_path = application_root / "data" / "security_agent.db"
         database_path.parent.mkdir(parents=True, exist_ok=True)
         self._event_store = SQLiteEventStore(database_path=database_path)
 
