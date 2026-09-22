@@ -21,3 +21,63 @@ rules:
     enabled: true
     severity: high
     base_confidence: 0.75
+
+  - pattern_id: google_api_key
+    name: Google API Key
+    category: api_key
+    provider: Google
+    regex: '\bAIza[0-9A-Za-z_-]{35}\b'
+    severity: high
+    base_confidence: 0.98
+    entropy_required: false
+    context_required: false
+    enabled: true
+    description: "Detects Google API key formats."
+
+  - pattern_id: gitlab_personal_access_token
+    name: GitLab Personal Access Token
+    category: access_token
+    provider: GitLab
+    regex: '\bglpat-[A-Za-z0-9_-]{20}\b'
+    severity: high
+    base_confidence: 0.98
+    entropy_required: false
+    context_required: false
+    enabled: true
+    description: "Detects standard GitLab personal access token formats."
+
+  - pattern_id: stripe_secret_or_restricted_key
+    name: Stripe Secret or Restricted Key
+    category: api_key
+    provider: Stripe
+    regex: '\b(?:sk|rk)_(?:live|test)_[A-Za-z0-9]{16,}\b'
+    severity: critical
+    base_confidence: 0.98
+    entropy_required: false
+    context_required: false
+    enabled: true
+    description: "Detects Stripe secret and restricted key formats."
+
+  - pattern_id: slack_token
+    name: Slack Token
+    category: access_token
+    provider: Slack
+    regex: '\bxox[baprs]-[A-Za-z0-9-]{10,200}\b'
+    severity: high
+    base_confidence: 0.97
+    entropy_required: false
+    context_required: false
+    enabled: true
+    description: "Detects Slack token formats."
+
+  - pattern_id: sendgrid_api_key
+    name: SendGrid API Key
+    category: api_key
+    provider: SendGrid
+    regex: '\bSG\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b'
+    severity: high
+    base_confidence: 0.98
+    entropy_required: false
+    context_required: false
+    enabled: true
+    description: "Detects SendGrid API key formats."
