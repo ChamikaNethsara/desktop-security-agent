@@ -1,6 +1,7 @@
+from fnmatch import fnmatch
 from pathlib import Path
 
-from config.rule_loader import load_file_rules
+from config.rule_loader import RuleLoader
 
 
 def discover_files(project_path):
@@ -12,14 +13,18 @@ def discover_files(project_path):
     if not root.is_dir():
         raise NotADirectoryError(f"Expected a directory: {root}")
 
-    config = load_file_rules()
+    config_path = (
+        Path(__file__).resolve().parent.parent
+        / "config"
+        / "file_rules.yaml"
+    )
 
-    extensions = set(config.get("supported_extensions", []))
-    special_names = {
-        name.lower()
-        for name in config.get("special_filenames", [])
-    }
-    ignored = set(config.get("ignored_directories", []))
+    config = RuleLoader(config_path).load_file_rules()
+
+    extensions = config.included_extensions
+    filenames = config.included_filenames
+    name_patterns = config.included_name_patterns
+    excluded = config.excluded_directories
 
     discovered = []
 
@@ -29,12 +34,21 @@ def discover_files(project_path):
 
         relative = path.relative_to(root)
 
-        if any(part in ignored for part in relative.parts[:-1]):
+        if any(
+            part.casefold() in excluded
+            for part in relative.parts[:-1]
+        ):
             continue
 
+        filename = path.name.casefold()
+
         if (
-            path.suffix.lower() in extensions
-            or path.name.lower() in special_names
+            path.suffix.casefold() in extensions
+            or filename in filenames
+            or any(
+                fnmatch(filename, pattern)
+                for pattern in name_patterns
+            )
         ):
             discovered.append(path)
 
