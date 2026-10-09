@@ -10,6 +10,12 @@ class FilePermissionsRule(BaseRule):
     severity = "Medium"
 
     def check(self, data, file_path):
+
+        # Unix permission bits do not reliably represent
+        # Windows ACL permissions.
+        if os.name == "nt":
+            return []
+
         try:
             mode = os.stat(file_path).st_mode
         except OSError:

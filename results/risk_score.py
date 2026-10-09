@@ -1,4 +1,4 @@
-from config.default_config import SEVERITY_WEIGHTS
+from config.auditor_config import SEVERITY_WEIGHTS
 
 
 def calculate_finding_penalty(finding):

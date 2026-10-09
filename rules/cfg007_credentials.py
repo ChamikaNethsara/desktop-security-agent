@@ -1,4 +1,4 @@
-from config.default_config import WEAK_CREDENTIALS
+from config.auditor_config import WEAK_CREDENTIALS
 from rules.base_rule import BaseRule
 
 
