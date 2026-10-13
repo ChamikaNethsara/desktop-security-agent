@@ -1,0 +1,8 @@
+# Application dependencies
+-r requirements.txt
+
+# Testing
+pytest==8.4.2
+
+# Windows application packaging
+pyinstaller==6.22.3

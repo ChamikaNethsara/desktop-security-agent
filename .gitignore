@@ -1,15 +1,70 @@
+# Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
 .venv/
+venv/
+env/
+
+# Testing and coverage
 .pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# IDEs and editors
+.vscode/
+.idea/
+
+# Operating system
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Databases and runtime data
+*.db
+*.sqlite
+*.sqlite3
+*.db-shm
+*.db-wal
+
+# Environment variables and local secrets
 .env
 .env.*
 !.env.example
-data/*.db
-data/*.jsonl
-*.log
-*.db
-*.db-shm
-*.db-wal
-*.sqlite
-*.sqlite3
+
+# Local project configuration
+local_config.*
+config.local.*
+
+# PyInstaller build artifacts
+build/
+dist/
+*.spec.bak
+
+# Generated Windows installer output
+/installer/
+
+# Python packaging artifacts
+*.egg-info/
+.eggs/
+wheels/
+pip-wheel-metadata/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Security-sensitive test output
+test_output/
+scan_results/
