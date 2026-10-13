@@ -1,0 +1,15 @@
+environment: production
+debug: true
+
+url: http://example.com/api
+verify_ssl: false
+
+username: admin
+password: password123
+
+services:
+  web:
+    privileged: true
+    ports:
+      - "0.0.0.0:3306:3306"
+      - "0.0.0.0:8080:80"

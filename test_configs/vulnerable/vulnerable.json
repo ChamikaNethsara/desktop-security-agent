@@ -1,0 +1,8 @@
+{
+  "environment": "production",
+  "debug": true,
+  "url": "http://example.com/api",
+  "verify_ssl": false,
+  "username": "admin",
+  "password": "password123"
+}

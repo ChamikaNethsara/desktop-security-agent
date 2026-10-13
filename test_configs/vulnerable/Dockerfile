@@ -1,0 +1,7 @@
+FROM python:3.13-slim
+
+ENV DATABASE_PASSWORD=password123
+ENV API_TOKEN=secret123
+ARG ADMIN_PASSWORD=admin123
+
+USER root
