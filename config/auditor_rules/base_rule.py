@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from results.findings import Finding
+from auditor.findings import Finding
 
 
 class BaseRule(ABC):

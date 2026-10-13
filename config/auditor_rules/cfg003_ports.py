@@ -1,10 +1,15 @@
-from rules.base_rule import BaseRule
+from config.auditor_rules.base_rule import BaseRule
 
 
-class BroadBindingRule(BaseRule):
-    rule_id = "CFG-008"
-    title = "Broad host/network binding"
-    severity = "Medium"
+SENSITIVE_PORTS = {
+    21, 22, 23, 25, 3306, 3389, 5432, 6379, 27017
+}
+
+
+class SensitivePortRule(BaseRule):
+    rule_id = "CFG-003"
+    title = "Sensitive port broadly exposed"
+    severity = "High"
 
     def check(self, data, file_path):
         findings = []
@@ -23,17 +28,25 @@ class BroadBindingRule(BaseRule):
 
             for port in service.get("ports", []):
                 port_text = str(port)
+                parts = port_text.split(":")
 
-                if (
+                try:
+                    container_port = int(parts[-1].split("/")[0])
+                except ValueError:
+                    continue
+
+                broad = (
                     port_text.startswith("0.0.0.0:")
                     or port_text.startswith("[::]:")
-                ):
+                )
+
+                if container_port in SENSITIVE_PORTS and broad:
                     findings.append(
                         self.finding(
                             file_path,
                             port_text,
-                            f"Service '{service_name}' binds a port to all network interfaces.",
-                            "Bind to a specific trusted interface where possible.",
+                            f"Service '{service_name}' broadly exposes a sensitive port.",
+                            "Restrict access using a private binding or firewall.",
                         )
                     )
 

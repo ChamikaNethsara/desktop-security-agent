@@ -30,7 +30,7 @@ from scanner.deduplicator import FindingDeduplicator
 from storage.event_store import SQLiteEventStore
 
 # Static Configuration Risk Auditor
-from auditor import ConfigurationAuditor
+from auditor.auditor import ConfigurationAuditor
 
 
 logger = logging.getLogger(__name__)

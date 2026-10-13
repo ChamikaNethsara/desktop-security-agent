@@ -1,5 +1,5 @@
 from config.auditor_config import WEAK_CREDENTIALS
-from rules.base_rule import BaseRule
+from config.auditor_rules.base_rule import BaseRule
 
 
 CREDENTIAL_KEYS = {

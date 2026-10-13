@@ -1,6 +1,6 @@
-from scanner.file_discovery import discover_files
-from scanner.config_parser import ConfigParser
-from scanner.rule_engine import RuleEngine
+from auditor.file_discovery import discover_files
+from auditor.config_parser import ConfigParser
+from auditor.rule_engine import RuleEngine
 
 
 class ConfigurationAuditor:

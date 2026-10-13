@@ -1,0 +1,13 @@
+environment: production
+debug: false
+
+url: https://example.com/api
+verify_ssl: true
+
+username: application_user
+
+services:
+  web:
+    privileged: false
+    ports:
+      - "127.0.0.1:8080:8080"

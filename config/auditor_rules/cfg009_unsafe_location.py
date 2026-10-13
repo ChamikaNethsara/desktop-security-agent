@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from rules.base_rule import BaseRule
+from config.auditor_rules.base_rule import BaseRule
 
 
 UNSAFE_NAMES = {
