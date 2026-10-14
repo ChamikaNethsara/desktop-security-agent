@@ -16,6 +16,7 @@ from typing import Any, Optional
 from PySide6.QtCore import QObject, Signal, QThread
 
 from config.rule_loader import RuleLoader
+from scanner.debouncer import EventDebouncer
 from scanner.scan_config import FileScanConfig
 from scanner.file_filter import FileEligibilityFilter
 from scanner.file_reader import SecureFileReader, FileReadStatus
@@ -54,7 +55,7 @@ class ScanWorker(QThread):
 
 class MonitoringWorker(QThread):
     """Worker processing queue events during real-time monitoring."""
-    event_processed = Signal(object)
+    event_processed = Signal(list)
 
     def __init__(self, bridge: "BackendBridge"):
         super().__init__()
@@ -65,9 +66,8 @@ class MonitoringWorker(QThread):
         while self._running:
             try:
                 if not self.bridge.event_queue.empty():
-                    finding = self.bridge.process_next_event()
-                    if finding:
-                        self.event_processed.emit(finding)
+                    findings = self.bridge.process_next_event()
+                    self.event_processed.emit(findings or [])
                 else:
                     time.sleep(0.15)
             except Exception as e:
@@ -128,6 +128,12 @@ class BackendBridge(QObject):
         self.monitored_paths: list[Path] = [self.project_root]
         self._monitoring_thread: Optional[MonitoringWorker] = None
 
+        # Debouncer for live filesystem events (coalesces rapid OS write events)
+        self.debouncer = EventDebouncer(
+            callback=self._handle_debounced_event,
+            delay_seconds=0.25,
+        )
+
         # Current target directory (defaults to test_configs/vulnerable if exists, or project_root)
         vuln_preset = self.project_root / "test_configs" / "vulnerable"
         if vuln_preset.exists():
@@ -141,8 +147,40 @@ class BackendBridge(QObject):
         self.last_risk_score: float = 100.0
         self.last_risk_category: str = "Excellent"
 
-        # Run initial actual scan
+        # Run initial scan & start real-time monitoring
         self.scan_target_project(self.current_target_dir)
+        self.start_monitoring(self.current_target_dir)
+
+    def _count_eligible_files(self, target: Path) -> int:
+        """Counts eligible files in target path according to file filtering rules."""
+        target_path = Path(target).resolve()
+        filter_engine = FileEligibilityFilter(
+            monitored_directories={target_path},
+            scan_config=self.file_scan_config,
+        )
+        count = 0
+        excluded_dirs = set(filter_engine.excluded_directories)
+        if target_path.is_file():
+            return 1 if filter_engine.is_eligible(target_path) else 0
+        elif target_path.is_dir():
+            for root, dirs, files in os.walk(target_path):
+                dirs[:] = [d for d in dirs if d.casefold() not in excluded_dirs]
+                for f in files:
+                    p = Path(root) / f
+                    if filter_engine.is_eligible(p):
+                        count += 1
+        return count
+
+    def set_target_directory(self, target: Path):
+        """Sets new target directory, rescans, and updates watcher if monitoring."""
+        target_path = Path(target).resolve()
+        self.current_target_dir = target_path
+        self.monitored_paths = [target_path]
+        if self.is_monitoring:
+            self.stop_monitoring()
+            self.start_monitoring(target_path)
+        else:
+            self.scan_target_project(target_path)
 
     # ------------------------------------------------------------------ #
     # Real Project Scanning (Actual Data)
@@ -328,8 +366,21 @@ class BackendBridge(QObject):
             return True
 
     def start_monitoring(self, target_directory: Optional[Path] = None):
-        target = target_directory or self.current_target_dir
+        target = Path(target_directory or self.current_target_dir).resolve()
+        self.current_target_dir = target
         self.monitored_paths = [target]
+
+        if self.watcher:
+            try:
+                self.watcher.stop()
+            except Exception:
+                pass
+            self.watcher = None
+
+        if self._monitoring_thread:
+            self._monitoring_thread.stop()
+            self._monitoring_thread.wait()
+            self._monitoring_thread = None
 
         self.watcher = FileWatcher(on_file_event=self._on_file_changed)
         self.watcher.add_directory(target)
@@ -361,21 +412,27 @@ class BackendBridge(QObject):
         self.refresh_stats()
 
     def _on_file_changed(self, file_path: Path):
+        """Submit incoming raw watchdog event to debouncer to coalesce rapid writes."""
+        self.debouncer.submit(file_path)
+
+    def _handle_debounced_event(self, file_path: Path):
+        """Called once per file when rapid write activity has settled."""
         self.event_queue.put(file_path)
 
-    def process_next_event(self) -> Optional[dict]:
+    def process_next_event(self) -> list[dict]:
         path = self.event_queue.get()
+        processed_findings: list[dict] = []
         try:
             filter_engine = FileEligibilityFilter(
                 monitored_directories=set(self.monitored_paths),
                 scan_config=self.file_scan_config,
             )
             if not filter_engine.is_eligible(path):
-                return None
+                return []
 
             result = self.file_reader.read(path)
             if result.status != FileReadStatus.SUCCESS:
-                return None
+                return []
 
             regex_matches = self.detector.detect(result.content, result.path)
             for m in regex_matches:
@@ -402,15 +459,25 @@ class BackendBridge(QObject):
                 )
                 upsert_res = self.secret_db.upsert_finding(finding_input)
                 f_data = self.secret_db.get_finding(upsert_res["finding_id"])
-                return f_data
+                if f_data:
+                    processed_findings.append(f_data)
+
+            # Re-discover eligible file count and run risk auditor
+            self.last_scanned_files_count = self._count_eligible_files(self.current_target_dir)
+            self.last_audit_findings = self.auditor.audit_project(self.current_target_dir)
+            self.last_risk_score = calculate_risk_score(self.last_audit_findings)
+            self.last_risk_category = get_risk_category(self.last_risk_score)
+
+            return processed_findings
         except Exception as e:
             logger.error("Error processing file event %s: %s", path, e)
+            return []
         finally:
             self.event_queue.task_done()
-        return None
 
-    def _on_worker_event(self, finding_data: dict):
-        self.finding_added.emit(finding_data)
+    def _on_worker_event(self, findings: list[dict]):
+        for f in findings:
+            self.finding_added.emit(f)
         self.refresh_stats()
 
     def refresh_stats(self):

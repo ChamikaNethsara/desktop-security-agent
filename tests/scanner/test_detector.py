@@ -138,3 +138,11 @@ def test_detector_rejects_invalid_path_type(detector: RegexDetectionEngine) -> N
             content="PASSWORD=test",
             file_path=".env",  # type: ignore[arg-type]
         )
+
+
+def test_detect_standalone_password_assignments(detector: RegexDetectionEngine) -> None:
+    content = "password=SuperSecret123!\npwd=adminSecretPwd\nPASSWORD=\"QuotedSecret!\""
+    matches = detector.detect(content=content, file_path=Path(".env"))
+    assert len(matches) == 3
+    for m in matches:
+        assert m.pattern_id == "generic_password_assignment"

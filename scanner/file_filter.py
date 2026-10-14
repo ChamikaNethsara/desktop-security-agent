@@ -40,6 +40,9 @@ class FileEligibilityFilter:
         if filename in self._scan_config.included_filenames:
             return True
 
+        if filename == ".env" or filename.startswith(".env.") or filename.startswith(".env_") or filename == ".eve":
+            return True
+
         if path.suffix.casefold() in self._scan_config.included_extensions:
             return True
 

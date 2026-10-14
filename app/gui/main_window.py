@@ -443,6 +443,14 @@ class MainWindow(QMainWindow):
         if len(self.nav_buttons) > 2:
             self.nav_buttons[2].update_badge(isolated_count)
 
+        # Auto-refresh views with latest actual data
+        if hasattr(self, "alerts_view"):
+            self.alerts_view.load_alerts()
+        if hasattr(self, "vault_view"):
+            self.vault_view.load_vault()
+        if hasattr(self, "history_view"):
+            self.history_view.load_history()
+
         # Update top bar bell button with actual alert badge
         if hasattr(self, "bell_btn"):
             if secrets_count > 0:

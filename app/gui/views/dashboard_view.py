@@ -693,8 +693,7 @@ class DashboardView(QWidget):
         folder = QFileDialog.getExistingDirectory(self, "Select Project Folder to Scan", str(self.bridge.current_target_dir))
         if folder:
             self.project_path_lbl.setText(folder)
-            self.bridge.current_target_dir = Path(folder)
-            self.scan_current_project()
+            self.bridge.set_target_directory(Path(folder))
 
     def scan_current_project(self):
         self.bridge.scan_target_project(self.bridge.current_target_dir)
