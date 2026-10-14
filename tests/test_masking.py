@@ -23,6 +23,7 @@ calls or hand-rolled temp directories appear anywhere in this file.
 from __future__ import annotations
 
 import json
+import os
 
 import pytest
 
@@ -30,7 +31,7 @@ import masking.encryption as encryption_module
 import masking.masker as masker_module
 
 from masking.encryption import decrypt_secret, encrypt_secret, DecryptionError
-from masking.masker import maskingError, apply_mask, preview_mask, rollback
+from masking.masker import MaskingError, apply_mask, preview_mask, rollback
 from masking.database import (
     FindingInput,
     FindingNotFoundError,
@@ -171,7 +172,10 @@ class TestEncryption:
         encrypt_secret("trigger-key-generation")
 
         assert key_path.exists()
-        assert (key_path.stat().st_mode & 0o777) == 0o600
+        if os.name == "nt":
+            assert (key_path.stat().st_mode & 0o600) == 0o600
+        else:
+            assert (key_path.stat().st_mode & 0o777) == 0o600
 
 
 # --------------------------------------------------------------------------- #

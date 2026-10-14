@@ -6,6 +6,11 @@ import sys
 import time
 from pathlib import Path
 
+# Ensure project root is in sys.path regardless of execution method
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
 from app.application import SecurityAgentApplication
 from auditor.auditor import ConfigurationAuditor
 from auditor.file_discovery import discover_files
@@ -101,18 +106,38 @@ def run_agent(project_directory: Path) -> None:
 # Main Entry Point
 # --------------------------------------------------
 
+def run_gui() -> int:
+    """Launch the Centralized Desktop Management Dashboard (PySide6)."""
+    from PySide6.QtWidgets import QApplication
+    from app.gui.main_window import MainWindow
+
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication(sys.argv)
+    window = MainWindow()
+    window.show()
+    return app.exec()
+
+
 def main() -> int:
     """
     Select the execution mode.
 
-    Default:
-        Run the Static Configuration Risk Auditor.
+    Default (no args or --gui):
+        Run the Centralized Desktop Management Dashboard (GUI).
 
-    --watch:
-        Run the Real-Time Desktop Security Agent.
+    <project_directory>:
+        Run the Static Configuration Risk Auditor (CLI).
+
+    <project_directory> --watch:
+        Run the Real-Time Desktop Security Agent (CLI).
     """
 
     arguments = sys.argv[1:]
+
+    # Check for GUI mode
+    if len(arguments) == 0 or "--gui" in arguments:
+        return run_gui()
 
     # Determine whether real-time monitoring is requested.
     watch_mode = "--watch" in arguments
@@ -121,15 +146,16 @@ def main() -> int:
     arguments = [
         argument
         for argument in arguments
-        if argument != "--watch"
+        if argument not in ("--watch", "--gui")
     ]
 
     # Validate command-line arguments.
     if len(arguments) != 1:
         print(
             "\nUsage:\n"
-            "  python -m app.main <project_directory>\n"
-            "  python -m app.main <project_directory> --watch\n"
+            "  python -m app.main                      # Launch Desktop Dashboard (GUI)\n"
+            "  python -m app.main <project_directory>          # CLI Configuration Risk Auditor\n"
+            "  python -m app.main <project_directory> --watch  # CLI Real-Time File Monitoring\n"
         )
         return 1
 
