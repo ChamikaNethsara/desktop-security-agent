@@ -29,6 +29,11 @@ from scanner.deduplicator import FindingDeduplicator
 
 from storage.event_store import SQLiteEventStore
 
+# Component 2 — Masking & Encrypted Storage
+from masking.database import SecretDatabase, FindingInput
+from masking.masker import preview_mask, apply_mask, rollback
+from masking.encryption import encrypt_secret, decrypt_secret
+
 # Static Configuration Risk Auditor
 from auditor.auditor import ConfigurationAuditor
 
@@ -152,6 +157,14 @@ class SecurityAgentApplication:
 
         self._event_store = SQLiteEventStore(
             database_path=database_path
+        )
+
+        # Component 2 — encrypted findings DB
+        component2_db_path = (
+            application_root / "data" / "adsa_secrets.db"
+        )
+        self._secret_db = SecretDatabase(
+            db_path=str(component2_db_path)
         )
 
         # --------------------------------------------------
@@ -300,6 +313,41 @@ class SecurityAgentApplication:
                     finding
                 )
 
+                # Component 2: persist finding metadata (no raw secret)
+                try:
+                    from datetime import datetime, timezone
+
+                    finding_input = FindingInput(
+                        file_path=str(finding.file_path),
+                        line_number=finding.line_number,
+                        pattern_id=finding.pattern_id,
+                        pattern_name=finding.pattern_name,
+                        category=finding.category,
+                        severity=(
+                            finding.severity.value
+                            if hasattr(finding.severity, "value")
+                            else str(finding.severity)
+                        ),
+                        confidence=float(finding.confidence),
+                        confidence_level=(
+                            finding.confidence_level.value
+                            if hasattr(finding.confidence_level, "value")
+                            else str(finding.confidence_level)
+                        ),
+                        regex_score=float(finding.regex_score),
+                        context_score=float(finding.context_score),
+                        entropy_score=float(finding.entropy_score),
+                        is_placeholder=bool(finding.is_placeholder),
+                        is_comment=bool(finding.is_comment),
+                        detected_at=datetime.now(timezone.utc).isoformat(),
+                    )
+                    self._secret_db.upsert_finding(finding_input)
+                except Exception:
+                    logger.exception(
+                        "Component 2 finding persistence failed for %s",
+                        finding.file_path,
+                    )
+
                 logger.info(
                     "Secret finding persisted: "
                     "%s | line=%d | "
@@ -388,6 +436,7 @@ class SecurityAgentApplication:
         self._watcher.stop()
 
         self._event_store.close()
+        self._secret_db.close()
 
         logger.info(
             "Desktop Security Agent stopped."
@@ -440,3 +489,7 @@ class SecurityAgentApplication:
     @property
     def configuration_auditor(self) -> ConfigurationAuditor:
         return self._configuration_auditor
+
+    @property
+    def secret_db(self) -> SecretDatabase:
+        return self._secret_db
