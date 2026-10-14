@@ -90,6 +90,20 @@ class ReportsView(QWidget):
         out_row.addWidget(self.out_edit, stretch=1)
 
         browse_btn = QPushButton("📁 Browse...")
+        browse_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: #1E2E4A;
+                color: #FFFFFF;
+                border: 1px solid #3B527E;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: 700;
+            }}
+            QPushButton:hover {{
+                background-color: #2A3F66;
+                border-color: {ACCENT_BLUE};
+            }}
+        """)
         browse_btn.clicked.connect(self.browse_pdf_location)
         out_row.addWidget(browse_btn)
         out_box.addLayout(out_row)
@@ -196,9 +210,9 @@ class ReportsView(QWidget):
             isolated_secrets = self.bridge.list_isolated_secrets()
             audit_findings = self.bridge.last_audit_findings
 
-            # If no audit was run yet, run one on test_configs/vulnerable
+            # If no audit was run yet, run one on current target directory
             if not audit_findings:
-                audit_res = self.bridge.run_project_audit(self.bridge.project_root / "test_configs" / "vulnerable")
+                audit_res = self.bridge.run_project_audit(self.bridge.current_target_dir)
                 audit_findings = audit_res.get("findings", [])
 
             # 2. Generate PDF

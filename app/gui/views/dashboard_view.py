@@ -44,6 +44,7 @@ class RecentAlertsCard(QFrame):
             }}
         """)
         self.setObjectName("RecentAlertsCard")
+        self.setMinimumHeight(280)
 
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(18, 16, 18, 16)
@@ -206,14 +207,15 @@ class QuickActionsCard(QFrame):
             QPushButton {{
                 background-color: {ACCENT_BLUE};
                 color: #FFFFFF;
-                border: 1px solid #3B82F6;
+                border: 1px solid #38BDF8;
                 border-radius: 8px;
                 font-weight: 700;
-                font-size: 12px;
+                font-size: 13px;
                 padding: 10px;
             }}
             QPushButton:hover {{
-                background-color: #1D4ED8;
+                background-color: #006ED3;
+                border-color: #60A5FA;
             }}
         """)
         self.monitor_btn.clicked.connect(self.start_monitoring_clicked.emit)
@@ -225,17 +227,18 @@ class QuickActionsCard(QFrame):
         self.report_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.report_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: #1E293B;
+                background-color: #1E2D48;
                 color: #FFFFFF;
-                border: 1px solid #334155;
+                border: 1px solid #384F78;
                 border-radius: 8px;
                 font-weight: 700;
-                font-size: 12px;
+                font-size: 13px;
                 padding: 10px;
             }}
             QPushButton:hover {{
-                background-color: #334155;
+                background-color: #283D64;
                 border-color: {ACCENT_BLUE};
+                color: #FFFFFF;
             }}
         """)
         self.report_btn.clicked.connect(self.generate_report_clicked.emit)
@@ -247,17 +250,18 @@ class QuickActionsCard(QFrame):
         self.refresh_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.refresh_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: #1E293B;
+                background-color: #1E2D48;
                 color: #FFFFFF;
-                border: 1px solid #334155;
+                border: 1px solid #384F78;
                 border-radius: 8px;
                 font-weight: 700;
-                font-size: 12px;
+                font-size: 13px;
                 padding: 10px;
             }}
             QPushButton:hover {{
-                background-color: #334155;
+                background-color: #283D64;
                 border-color: {COLOR_GREEN};
+                color: #FFFFFF;
             }}
         """)
         self.refresh_btn.clicked.connect(self.refresh_clicked.emit)
@@ -269,17 +273,18 @@ class QuickActionsCard(QFrame):
         self.settings_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.settings_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: #1E293B;
+                background-color: #1E2D48;
                 color: #FFFFFF;
-                border: 1px solid #334155;
+                border: 1px solid #384F78;
                 border-radius: 8px;
                 font-weight: 700;
-                font-size: 12px;
+                font-size: 13px;
                 padding: 10px;
             }}
             QPushButton:hover {{
-                background-color: #334155;
-                border-color: #94A3B8;
+                background-color: #283D64;
+                border-color: {COLOR_PURPLE};
+                color: #FFFFFF;
             }}
         """)
         self.settings_btn.clicked.connect(self.settings_clicked.emit)
@@ -297,7 +302,7 @@ class QuickActionsCard(QFrame):
                     border: 1px solid #EF4444;
                     border-radius: 8px;
                     font-weight: 700;
-                    font-size: 12px;
+                    font-size: 13px;
                     padding: 10px;
                 }}
                 QPushButton:hover {{
@@ -310,14 +315,15 @@ class QuickActionsCard(QFrame):
                 QPushButton {{
                     background-color: {ACCENT_BLUE};
                     color: #FFFFFF;
-                    border: 1px solid #3B82F6;
+                    border: 1px solid #38BDF8;
                     border-radius: 8px;
                     font-weight: 700;
-                    font-size: 12px;
+                    font-size: 13px;
                     padding: 10px;
                 }}
                 QPushButton:hover {{
-                    background-color: #1D4ED8;
+                    background-color: #006ED3;
+                    border-color: #60A5FA;
                 }}
             """)
 
@@ -436,12 +442,15 @@ class SecurityActivityTable(QFrame):
         self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(3, 115)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(40)
+        self.table.verticalHeader().setMinimumSectionSize(36)
         self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
-        self.table.setMinimumHeight(170)
+        self.table.setMinimumHeight(190)
 
         layout.addWidget(self.table)
 
@@ -449,6 +458,7 @@ class SecurityActivityTable(QFrame):
         self.table.setRowCount(0)
         if not events:
             self.table.setRowCount(1)
+            self.table.setRowHeight(0, 40)
             item = QTableWidgetItem("No security events recorded yet.")
             item.setForeground(QColor(TEXT_MUTED))
             self.table.setItem(0, 2, item)
@@ -456,6 +466,7 @@ class SecurityActivityTable(QFrame):
 
         self.table.setRowCount(len(events))
         for row_idx, ev in enumerate(events):
+            self.table.setRowHeight(row_idx, 40)
             t_str = "Recent"
             det_at = ev.get("detected_at")
             if det_at:
@@ -483,10 +494,10 @@ class SecurityActivityTable(QFrame):
             self.table.setItem(row_idx, 2, det_item)
 
             badge = SeverityBadge(sev)
-            badge.setFixedHeight(24)
             badge_container = QWidget()
             b_layout = QHBoxLayout(badge_container)
-            b_layout.setContentsMargins(4, 2, 4, 2)
+            b_layout.setContentsMargins(0, 0, 0, 0)
+            b_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             b_layout.addWidget(badge)
             self.table.setCellWidget(row_idx, 3, badge_container)
 
@@ -499,15 +510,19 @@ class DashboardView(QWidget):
     def __init__(self, bridge: "BackendBridge", parent=None):
         super().__init__(parent)
         self.bridge = bridge
+        self.current_mode = "wide"
 
         scroll = QScrollArea(self)
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.Shape.NoFrame)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll.setStyleSheet("background: transparent;")
 
-        content_widget = QWidget()
-        self.main_layout = QVBoxLayout(content_widget)
-        self.main_layout.setContentsMargins(24, 16, 24, 24)
+        self.content_widget = QWidget()
+        self.content_widget.setMinimumWidth(740)
+        self.main_layout = QVBoxLayout(self.content_widget)
+        self.main_layout.setContentsMargins(20, 16, 20, 24)
         self.main_layout.setSpacing(18)
 
         # -------------------------------------------------------------
@@ -519,7 +534,7 @@ class DashboardView(QWidget):
                 background-color: {BG_CARD};
                 border: 1px solid {BORDER_COLOR};
                 border-radius: 10px;
-                padding: 10px 16px;
+                padding: 8px 14px;
             }}
         """)
         pb_layout = QHBoxLayout(project_bar)
@@ -531,25 +546,27 @@ class DashboardView(QWidget):
         pb_layout.addWidget(p_lbl)
 
         self.project_path_lbl = QLabel(str(self.bridge.current_target_dir))
+        self.project_path_lbl.setToolTip(str(self.bridge.current_target_dir))
         self.project_path_lbl.setStyleSheet(f"color: {ACCENT_BLUE}; font-family: Consolas; font-size: 12px; font-weight: 600;")
         pb_layout.addWidget(self.project_path_lbl, stretch=1)
 
         # Change Folder button
-        change_dir_btn = QPushButton("Change Folder...")
+        change_dir_btn = QPushButton("📁 Change Folder...")
         change_dir_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         change_dir_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: #1E293B;
+                background-color: #1E2E4A;
                 color: #FFFFFF;
-                border: 1px solid #334155;
-                border-radius: 6px;
-                padding: 6px 14px;
-                font-weight: 600;
+                border: 1px solid #3B527E;
+                border-radius: 7px;
+                padding: 8px 16px;
+                font-weight: 700;
                 font-size: 12px;
             }}
             QPushButton:hover {{
-                background-color: #334155;
+                background-color: #2A3F66;
                 border-color: {ACCENT_BLUE};
+                color: #FFFFFF;
             }}
         """)
         change_dir_btn.clicked.connect(self.choose_target_folder)
@@ -562,14 +579,15 @@ class DashboardView(QWidget):
             QPushButton {{
                 background-color: {ACCENT_BLUE};
                 color: #FFFFFF;
-                border: 1px solid #3B82F6;
-                border-radius: 6px;
-                padding: 6px 18px;
+                border: 1px solid #38BDF8;
+                border-radius: 7px;
+                padding: 8px 20px;
                 font-weight: 700;
                 font-size: 12px;
             }}
             QPushButton:hover {{
-                background-color: #1D4ED8;
+                background-color: #006ED3;
+                border-color: #60A5FA;
             }}
         """)
         scan_now_btn.clicked.connect(self.scan_current_project)
@@ -578,10 +596,10 @@ class DashboardView(QWidget):
         self.main_layout.addWidget(project_bar)
 
         # -------------------------------------------------------------
-        # 1. Top Row: 4 Interactive Stat Cards (Fully Linked)
+        # 1. Top Section: 4 Interactive Stat Cards (Fully Linked Grid)
         # -------------------------------------------------------------
-        top_row = QHBoxLayout()
-        top_row.setSpacing(16)
+        self.top_grid = QGridLayout()
+        self.top_grid.setSpacing(14)
 
         self.card_files = StatCard(
             icon_type="folder",
@@ -594,7 +612,6 @@ class DashboardView(QWidget):
             trend_positive=True
         )
         self.card_files.clicked.connect(lambda: self.navigate_to_tab.emit("risk"))
-        top_row.addWidget(self.card_files)
 
         self.card_secrets = StatCard(
             icon_type="key",
@@ -607,7 +624,6 @@ class DashboardView(QWidget):
             trend_positive=False
         )
         self.card_secrets.clicked.connect(lambda: self.navigate_to_tab.emit("alerts"))
-        top_row.addWidget(self.card_secrets)
 
         self.card_isolated = StatCard(
             icon_type="lock",
@@ -620,7 +636,6 @@ class DashboardView(QWidget):
             trend_positive=True
         )
         self.card_isolated.clicked.connect(lambda: self.navigate_to_tab.emit("vault"))
-        top_row.addWidget(self.card_isolated)
 
         self.card_risk = StatCard(
             icon_type="shield",
@@ -633,51 +648,45 @@ class DashboardView(QWidget):
             trend_positive=True
         )
         self.card_risk.clicked.connect(lambda: self.navigate_to_tab.emit("risk"))
-        top_row.addWidget(self.card_risk)
 
-        self.main_layout.addLayout(top_row)
+        self.main_layout.addLayout(self.top_grid)
 
         # -------------------------------------------------------------
-        # 2. Middle Row: Activity Chart + Recent Alerts + Risk Gauge
+        # 2. Middle Section: Activity Chart + Recent Alerts + Risk Gauge
         # -------------------------------------------------------------
-        mid_row = QHBoxLayout()
-        mid_row.setSpacing(16)
+        self.mid_grid = QGridLayout()
+        self.mid_grid.setSpacing(16)
 
         self.chart_widget = ChartWidget()
-        mid_row.addWidget(self.chart_widget, stretch=45)
-
         self.recent_alerts = RecentAlertsCard()
         self.recent_alerts.view_all_clicked.connect(lambda: self.navigate_to_tab.emit("alerts"))
-        mid_row.addWidget(self.recent_alerts, stretch=30)
-
         self.risk_gauge = RiskGaugeWidget()
-        mid_row.addWidget(self.risk_gauge, stretch=25)
 
-        self.main_layout.addLayout(mid_row)
+        self.main_layout.addLayout(self.mid_grid)
 
         # -------------------------------------------------------------
-        # 3. Bottom Row: Table + Quick Actions + System Status
+        # 3. Bottom Section: Table + Quick Actions + System Status
         # -------------------------------------------------------------
-        bot_row = QHBoxLayout()
-        bot_row.setSpacing(16)
+        self.bot_grid = QGridLayout()
+        self.bot_grid.setSpacing(16)
 
         self.activity_table = SecurityActivityTable()
-        bot_row.addWidget(self.activity_table, stretch=48)
 
         self.quick_actions = QuickActionsCard()
         self.quick_actions.start_monitoring_clicked.connect(self._toggle_monitoring)
         self.quick_actions.generate_report_clicked.connect(lambda: self.navigate_to_tab.emit("reports"))
         self.quick_actions.refresh_clicked.connect(self.scan_current_project)
         self.quick_actions.settings_clicked.connect(lambda: self.navigate_to_tab.emit("settings"))
-        bot_row.addWidget(self.quick_actions, stretch=27)
 
         self.system_status = SystemStatusCard()
-        bot_row.addWidget(self.system_status, stretch=25)
 
-        self.main_layout.addLayout(bot_row)
+        self.main_layout.addLayout(self.bot_grid)
+
+        # Initial layout setup
+        self._apply_responsive_layout("wide")
 
         # Wrap in scroll
-        scroll.setWidget(content_widget)
+        scroll.setWidget(self.content_widget)
         outer_layout = QVBoxLayout(self)
         outer_layout.setContentsMargins(0, 0, 0, 0)
         outer_layout.addWidget(scroll)
@@ -688,6 +697,73 @@ class DashboardView(QWidget):
 
         # Load initial actual data
         self.refresh_dashboard(self.bridge.get_dashboard_data())
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        new_mode = "wide" if self.width() >= 1120 else "compact"
+        if new_mode != self.current_mode:
+            self.current_mode = new_mode
+            self._apply_responsive_layout(new_mode)
+
+    def _apply_responsive_layout(self, mode: str):
+        # 1. Top Stat Cards
+        for w in (self.card_files, self.card_secrets, self.card_isolated, self.card_risk):
+            self.top_grid.removeWidget(w)
+
+        if mode == "wide":
+            self.top_grid.addWidget(self.card_files, 0, 0)
+            self.top_grid.addWidget(self.card_secrets, 0, 1)
+            self.top_grid.addWidget(self.card_isolated, 0, 2)
+            self.top_grid.addWidget(self.card_risk, 0, 3)
+            for c in range(4):
+                self.top_grid.setColumnStretch(c, 1)
+        else:
+            self.top_grid.addWidget(self.card_files, 0, 0)
+            self.top_grid.addWidget(self.card_secrets, 0, 1)
+            self.top_grid.addWidget(self.card_isolated, 1, 0)
+            self.top_grid.addWidget(self.card_risk, 1, 1)
+            self.top_grid.setColumnStretch(0, 1)
+            self.top_grid.setColumnStretch(1, 1)
+            self.top_grid.setColumnStretch(2, 0)
+            self.top_grid.setColumnStretch(3, 0)
+
+        # 2. Middle Section (Chart + Alerts + Risk Gauge)
+        for w in (self.chart_widget, self.recent_alerts, self.risk_gauge):
+            self.mid_grid.removeWidget(w)
+
+        if mode == "wide":
+            self.mid_grid.addWidget(self.chart_widget, 0, 0, 1, 1)
+            self.mid_grid.addWidget(self.recent_alerts, 0, 1, 1, 1)
+            self.mid_grid.addWidget(self.risk_gauge, 0, 2, 1, 1)
+            self.mid_grid.setColumnStretch(0, 46)
+            self.mid_grid.setColumnStretch(1, 28)
+            self.mid_grid.setColumnStretch(2, 26)
+        else:
+            self.mid_grid.addWidget(self.chart_widget, 0, 0, 1, 2)
+            self.mid_grid.addWidget(self.recent_alerts, 1, 0, 1, 1)
+            self.mid_grid.addWidget(self.risk_gauge, 1, 1, 1, 1)
+            self.mid_grid.setColumnStretch(0, 1)
+            self.mid_grid.setColumnStretch(1, 1)
+            self.mid_grid.setColumnStretch(2, 0)
+
+        # 3. Bottom Section (Table + Actions + Status)
+        for w in (self.activity_table, self.quick_actions, self.system_status):
+            self.bot_grid.removeWidget(w)
+
+        if mode == "wide":
+            self.bot_grid.addWidget(self.activity_table, 0, 0, 1, 1)
+            self.bot_grid.addWidget(self.quick_actions, 0, 1, 1, 1)
+            self.bot_grid.addWidget(self.system_status, 0, 2, 1, 1)
+            self.bot_grid.setColumnStretch(0, 48)
+            self.bot_grid.setColumnStretch(1, 27)
+            self.bot_grid.setColumnStretch(2, 25)
+        else:
+            self.bot_grid.addWidget(self.activity_table, 0, 0, 1, 2)
+            self.bot_grid.addWidget(self.quick_actions, 1, 0, 1, 1)
+            self.bot_grid.addWidget(self.system_status, 1, 1, 1, 1)
+            self.bot_grid.setColumnStretch(0, 1)
+            self.bot_grid.setColumnStretch(1, 1)
+            self.bot_grid.setColumnStretch(2, 0)
 
     def choose_target_folder(self):
         folder = QFileDialog.getExistingDirectory(self, "Select Project Folder to Scan", str(self.bridge.current_target_dir))

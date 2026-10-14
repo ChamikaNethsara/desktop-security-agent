@@ -34,18 +34,18 @@ COLOR_PURPLE_BG = "#4C1D95"
 COLOR_CYAN = "#06B6D4"
 
 
-def get_severity_colors(severity: str) -> tuple[str, str]:
-    """Returns (text_color, background_color) for severity pill."""
+def get_severity_colors(severity: str) -> tuple[str, str, str]:
+    """Returns (text_color, background_color, border_color) for severity pill."""
     sev = str(severity).lower()
     if sev in ("critical",):
-        return (COLOR_RED, "#3B1115")
+        return ("#FF4D4D", "#4C1117", "#FF4D4D")
     elif sev in ("high",):
-        return (COLOR_YELLOW, "#3B2610")
+        return ("#FFAA00", "#4B2807", "#FFAA00")
     elif sev in ("medium",):
-        return ("#FBBF24", "#372B10")
+        return ("#FCD34D", "#423209", "#FCD34D")
     elif sev in ("low", "info"):
-        return (ACCENT_BLUE_LIGHT, "#0F2847")
-    return (TEXT_SECONDARY, "#1A2436")
+        return (ACCENT_BLUE_LIGHT, "#0D2E54", ACCENT_BLUE_LIGHT)
+    return (TEXT_SECONDARY, "#1A2436", "#334155")
 
 
 APP_STYLESHEET = f"""
@@ -59,6 +59,10 @@ QWidget {{
     color: {TEXT_PRIMARY};
     font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
     font-size: 13px;
+}}
+
+QLabel {{
+    border: none;
 }}
 
 /* Scroll bars */
@@ -140,34 +144,38 @@ QComboBox QAbstractItemView {{
 
 /* Push Buttons */
 QPushButton {{
-    background-color: {BG_CARD};
-    color: {TEXT_PRIMARY};
-    border: 1px solid {BORDER_COLOR};
+    background-color: #1F2D48;
+    color: #FFFFFF;
+    border: 1px solid #384F78;
     border-radius: 8px;
     padding: 8px 16px;
-    font-weight: 500;
+    font-weight: 600;
 }}
 QPushButton:hover {{
-    background-color: {BG_CARD_HOVER};
+    background-color: #2B3D62;
     border-color: {ACCENT_BLUE};
+    color: #FFFFFF;
 }}
 QPushButton:pressed {{
-    background-color: #0E1829;
+    background-color: #142036;
 }}
 QPushButton:disabled {{
-    color: {TEXT_MUTED};
-    border-color: {BORDER_SUBTLE};
+    color: #64748B;
+    background-color: #131B2E;
+    border-color: #1E2B45;
 }}
 
 /* Primary Action Button */
 QPushButton.primary-btn {{
     background-color: {ACCENT_BLUE};
     color: #FFFFFF;
-    border: none;
-    font-weight: 600;
+    border: 1px solid #38BDF8;
+    border-radius: 8px;
+    font-weight: 700;
 }}
 QPushButton.primary-btn:hover {{
-    background-color: {ACCENT_BLUE_HOVER};
+    background-color: #006ED3;
+    border-color: #60A5FA;
 }}
 QPushButton.primary-btn:pressed {{
     background-color: #005DB3;
@@ -175,13 +183,14 @@ QPushButton.primary-btn:pressed {{
 
 /* Danger Action Button */
 QPushButton.danger-btn {{
-    background-color: #991B1B;
+    background-color: #DC2626;
     color: #FFFFFF;
-    border: none;
-    font-weight: 600;
+    border: 1px solid #EF4444;
+    border-radius: 8px;
+    font-weight: 700;
 }}
 QPushButton.danger-btn:hover {{
-    background-color: {COLOR_RED};
+    background-color: #B91C1C;
 }}
 
 /* Tables */
@@ -196,7 +205,7 @@ QTableWidget {{
     outline: none;
 }}
 QTableWidget::item {{
-    padding: 10px 8px;
+    padding: 4px 8px;
     border-bottom: 1px solid {BORDER_SUBTLE};
 }}
 QTableWidget::item:selected {{

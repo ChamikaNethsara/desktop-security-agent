@@ -72,9 +72,13 @@ class HistoryView(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
-        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(4, 110)
+        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(5, 115)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(42)
+        self.table.verticalHeader().setMinimumSectionSize(36)
         self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -102,6 +106,8 @@ class HistoryView(QWidget):
 
         self.table.setRowCount(len(filtered))
         for row_idx, f in enumerate(filtered):
+            self.table.setRowHeight(row_idx, 42)
+
             # Timestamp
             ts = f.get("detected_at", "")[:19].replace("T", " ")
             t_item = QTableWidgetItem(ts)
@@ -127,7 +133,8 @@ class HistoryView(QWidget):
             sev_badge = SeverityBadge(f.get("severity", "medium"))
             s_box = QWidget()
             sl = QHBoxLayout(s_box)
-            sl.setContentsMargins(4, 2, 4, 2)
+            sl.setContentsMargins(0, 0, 0, 0)
+            sl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             sl.addWidget(sev_badge)
             self.table.setCellWidget(row_idx, 4, s_box)
 
@@ -135,7 +142,8 @@ class HistoryView(QWidget):
             st_badge = StatusBadge(f.get("status", "detected"))
             st_box = QWidget()
             stl = QHBoxLayout(st_box)
-            stl.setContentsMargins(4, 2, 4, 2)
+            stl.setContentsMargins(0, 0, 0, 0)
+            stl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             stl.addWidget(st_badge)
             self.table.setCellWidget(row_idx, 5, st_box)
 

@@ -46,11 +46,11 @@ class NavButton(QPushButton):
         self.layout.setSpacing(12)
 
         self.icon_lbl = QLabel(icon_str)
-        self.icon_lbl.setStyleSheet("font-size: 15px; background: transparent;")
+        self.icon_lbl.setStyleSheet("font-size: 15px; background: transparent; border: none;")
         self.layout.addWidget(self.icon_lbl)
 
         self.text_lbl = QLabel(text)
-        self.text_lbl.setStyleSheet("font-size: 13px; font-weight: 500; background: transparent;")
+        self.text_lbl.setStyleSheet("font-size: 13px; font-weight: 500; background: transparent; border: none;")
         self.layout.addWidget(self.text_lbl)
 
         self.layout.addStretch()
@@ -84,8 +84,8 @@ class NavButton(QPushButton):
                     text-align: left;
                 }}
             """)
-            self.text_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #FFFFFF; background: transparent;")
-            self.icon_lbl.setStyleSheet("font-size: 15px; color: #FFFFFF; background: transparent;")
+            self.text_lbl.setStyleSheet("font-size: 13px; font-weight: 700; color: #FFFFFF; background: transparent; border: none;")
+            self.icon_lbl.setStyleSheet("font-size: 15px; color: #FFFFFF; background: transparent; border: none;")
         else:
             self.setStyleSheet(f"""
                 QPushButton {{
@@ -98,8 +98,8 @@ class NavButton(QPushButton):
                     background-color: #121A2B;
                 }}
             """)
-            self.text_lbl.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_SECONDARY}; background: transparent;")
-            self.icon_lbl.setStyleSheet(f"font-size: 15px; color: {TEXT_SECONDARY}; background: transparent;")
+            self.text_lbl.setStyleSheet(f"font-size: 13px; font-weight: 500; color: {TEXT_SECONDARY}; background: transparent; border: none;")
+            self.icon_lbl.setStyleSheet(f"font-size: 15px; color: {TEXT_SECONDARY}; background: transparent; border: none;")
 
     def update_badge(self, count: int):
         if count > 0:
@@ -131,8 +131,18 @@ class MainWindow(QMainWindow):
         self.bridge = bridge or BackendBridge()
 
         self.setWindowTitle("SecureGuard — Desktop Security Agent")
-        self.resize(1280, 840)
-        self.setMinimumSize(1024, 680)
+
+        # Responsive dynamic screen resolution sizing
+        screen = QApplication.primaryScreen()
+        if screen:
+            avail = screen.availableGeometry()
+            target_w = min(1360, max(880, int(avail.width() * 0.90)))
+            target_h = min(860, max(560, int(avail.height() * 0.88)))
+            self.resize(target_w, target_h)
+        else:
+            self.resize(1180, 740)
+
+        self.setMinimumSize(820, 500)
         self.setStyleSheet(APP_STYLESHEET)
 
         # Central layout (Sidebar on left, Main content on right)
@@ -194,11 +204,17 @@ class MainWindow(QMainWindow):
 
     def create_sidebar(self) -> QWidget:
         sidebar = QFrame()
-        sidebar.setFixedWidth(240)
+        sidebar.setObjectName("AppSidebar")
+        sidebar.setFixedWidth(216)
         sidebar.setStyleSheet(f"""
-            QFrame {{
+            QFrame#AppSidebar {{
                 background-color: {BG_SIDEBAR};
+                border: none;
                 border-right: 1px solid {BORDER_COLOR};
+            }}
+            QFrame#AppSidebar QLabel {{
+                border: none;
+                background: transparent;
             }}
         """)
 
@@ -211,18 +227,18 @@ class MainWindow(QMainWindow):
         brand_row.setSpacing(10)
 
         logo_lbl = QLabel("🛡️")
-        logo_lbl.setStyleSheet("font-size: 26px; background: transparent;")
+        logo_lbl.setStyleSheet("font-size: 26px; background: transparent; border: none;")
         brand_row.addWidget(logo_lbl)
 
         brand_text_box = QVBoxLayout()
         brand_text_box.setSpacing(1)
 
         app_title = QLabel("SecureGuard")
-        app_title.setStyleSheet("font-size: 16px; font-weight: 800; color: #FFFFFF; background: transparent;")
+        app_title.setStyleSheet("font-size: 16px; font-weight: 800; color: #FFFFFF; background: transparent; border: none;")
         brand_text_box.addWidget(app_title)
 
         app_sub = QLabel("Desktop Security Agent")
-        app_sub.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent;")
+        app_sub.setStyleSheet(f"font-size: 11px; color: {TEXT_MUTED}; background: transparent; border: none;")
         brand_text_box.addWidget(app_sub)
 
         brand_row.addLayout(brand_text_box)
@@ -267,30 +283,35 @@ class MainWindow(QMainWindow):
 
     def create_top_bar(self) -> QWidget:
         top_bar = QFrame()
-        top_bar.setFixedHeight(72)
+        top_bar.setObjectName("AppTopBar")
+        top_bar.setFixedHeight(68)
         top_bar.setStyleSheet(f"""
-            QFrame {{
+            QFrame#AppTopBar {{
                 background-color: {BG_MAIN};
+                border: none;
                 border-bottom: 1px solid {BORDER_COLOR};
-                padding: 0px 24px;
+            }}
+            QFrame#AppTopBar QLabel {{
+                border: none;
+                background: transparent;
             }}
         """)
 
         layout = QHBoxLayout(top_bar)
-        layout.setContentsMargins(24, 0, 24, 0)
-        layout.setSpacing(16)
+        layout.setContentsMargins(20, 0, 20, 0)
+        layout.setSpacing(14)
 
         # Title + Subtitle
         title_box = QVBoxLayout()
-        title_box.setSpacing(2)
+        title_box.setSpacing(1)
         title_box.setAlignment(Qt.AlignmentFlag.AlignVCenter)
 
         self.page_title = QLabel("Security Overview")
-        self.page_title.setStyleSheet("font-size: 20px; font-weight: 700; color: #FFFFFF;")
+        self.page_title.setStyleSheet("font-size: 18px; font-weight: 700; color: #FFFFFF;")
         title_box.addWidget(self.page_title)
 
-        self.page_subtitle = QLabel("Monitor security events and manage your project's security posture.")
-        self.page_subtitle.setStyleSheet(f"font-size: 12px; color: {TEXT_SECONDARY};")
+        self.page_subtitle = QLabel("Real-time monitoring & posture management.")
+        self.page_subtitle.setStyleSheet(f"font-size: 11px; color: {TEXT_SECONDARY};")
         title_box.addWidget(self.page_subtitle)
 
         layout.addLayout(title_box)
@@ -344,30 +365,6 @@ class MainWindow(QMainWindow):
         """)
         self.bell_btn.clicked.connect(lambda: self.set_active_tab(1))
         layout.addWidget(self.bell_btn)
-
-        # User profile
-        profile_frame = QFrame()
-        profile_frame.setStyleSheet(f"""
-            QFrame {{
-                background-color: {BG_CARD};
-                border: 1px solid {BORDER_COLOR};
-                border-radius: 18px;
-                padding: 4px 10px;
-            }}
-        """)
-        pf_layout = QHBoxLayout(profile_frame)
-        pf_layout.setContentsMargins(6, 4, 8, 4)
-        pf_layout.setSpacing(8)
-
-        avatar = QLabel("👤")
-        avatar.setStyleSheet("font-size: 14px;")
-        pf_layout.addWidget(avatar)
-
-        user_lbl = QLabel("Developer ⌵")
-        user_lbl.setStyleSheet(f"color: {TEXT_PRIMARY}; font-size: 12px; font-weight: 600;")
-        pf_layout.addWidget(user_lbl)
-
-        layout.addWidget(profile_frame)
 
         return top_bar
 

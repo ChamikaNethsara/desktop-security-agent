@@ -134,12 +134,8 @@ class BackendBridge(QObject):
             delay_seconds=0.25,
         )
 
-        # Current target directory (defaults to test_configs/vulnerable if exists, or project_root)
-        vuln_preset = self.project_root / "test_configs" / "vulnerable"
-        if vuln_preset.exists():
-            self.current_target_dir = vuln_preset
-        else:
-            self.current_target_dir = self.project_root
+        # Current target directory: defaults to the project root itself for actual live monitoring
+        self.current_target_dir = self.project_root
 
         # Scan state
         self.last_scanned_files_count = 0
