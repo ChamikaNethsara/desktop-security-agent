@@ -52,6 +52,20 @@ class SettingsView(QWidget):
         top_bar.addStretch()
 
         self.reload_btn = QPushButton("🔄 Reload Pipelines")
+        self.reload_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: #1E2E4A;
+                color: #FFFFFF;
+                border: 1px solid #3B527E;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: 700;
+            }}
+            QPushButton:hover {{
+                background-color: #2A3F66;
+                border-color: {ACCENT_BLUE};
+            }}
+        """)
         self.reload_btn.clicked.connect(self.reload_all_rules)
         top_bar.addWidget(self.reload_btn)
         layout.addLayout(top_bar)
@@ -163,6 +177,20 @@ class SettingsView(QWidget):
         tb_layout.addWidget(self.test_sample_edit)
 
         test_btn = QPushButton("Test Regex Match")
+        test_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: #1E2E4A;
+                color: #FFFFFF;
+                border: 1px solid #3B527E;
+                border-radius: 6px;
+                padding: 7px;
+                font-weight: 700;
+            }}
+            QPushButton:hover {{
+                background-color: #2A3F66;
+                border-color: {ACCENT_BLUE};
+            }}
+        """)
         test_btn.clicked.connect(self.test_regex_pattern)
         tb_layout.addWidget(test_btn)
 
@@ -174,13 +202,14 @@ class SettingsView(QWidget):
             QPushButton {{
                 background-color: {ACCENT_BLUE};
                 color: #FFFFFF;
-                border: none;
+                border: 1px solid #38BDF8;
                 border-radius: 8px;
                 font-weight: 700;
                 padding: 10px;
             }}
             QPushButton:hover {{
-                background-color: #0070D8;
+                background-color: #006ED3;
+                border-color: #60A5FA;
             }}
         """)
         add_btn.clicked.connect(self.add_custom_rule)
@@ -369,10 +398,10 @@ class SettingsView(QWidget):
             QPushButton {{
                 background-color: #064E3B;
                 color: #34D399;
-                border: 1px solid #10B98155;
+                border: 1px solid #10B981;
                 border-radius: 6px;
-                padding: 6px 14px;
-                font-weight: 600;
+                padding: 7px 16px;
+                font-weight: 700;
             }}
             QPushButton:hover {{
                 background-color: #10B981;

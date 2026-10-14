@@ -122,6 +122,20 @@ class AlertsView(QWidget):
         top_bar.addStretch()
 
         self.refresh_btn = QPushButton("🔄 Refresh Alerts")
+        self.refresh_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: #1E2E4A;
+                color: #FFFFFF;
+                border: 1px solid #3B527E;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: 700;
+            }}
+            QPushButton:hover {{
+                background-color: #2A3F66;
+                border-color: {ACCENT_BLUE};
+            }}
+        """)
         self.refresh_btn.clicked.connect(self.load_alerts)
         top_bar.addWidget(self.refresh_btn)
         layout.addLayout(top_bar)
@@ -153,14 +167,19 @@ class AlertsView(QWidget):
         self.table.setHorizontalHeaderLabels([
             "Severity", "Pattern Name", "Category", "File & Line", "Confidence", "Status", "Actions"
         ])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(0, 110)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(5, 115)
+        self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(6, 220)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(44)
+        self.table.verticalHeader().setMinimumSectionSize(38)
         self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -197,11 +216,14 @@ class AlertsView(QWidget):
 
         self.table.setRowCount(len(filtered))
         for row_idx, f in enumerate(filtered):
+            self.table.setRowHeight(row_idx, 44)
+
             # Severity Badge
             badge = SeverityBadge(f.get("severity", "medium"))
             badge_box = QWidget()
             bl = QHBoxLayout(badge_box)
-            bl.setContentsMargins(4, 2, 4, 2)
+            bl.setContentsMargins(0, 0, 0, 0)
+            bl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             bl.addWidget(badge)
             self.table.setCellWidget(row_idx, 0, badge_box)
 
@@ -231,28 +253,32 @@ class AlertsView(QWidget):
             st_badge = StatusBadge(f.get("status", "detected"))
             st_box = QWidget()
             stl = QHBoxLayout(st_box)
-            stl.setContentsMargins(4, 2, 4, 2)
+            stl.setContentsMargins(0, 0, 0, 0)
+            stl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             stl.addWidget(st_badge)
             self.table.setCellWidget(row_idx, 5, st_box)
 
             # Action Buttons
             action_box = QWidget()
             act_layout = QHBoxLayout(action_box)
-            act_layout.setContentsMargins(2, 2, 2, 2)
+            act_layout.setContentsMargins(0, 0, 0, 0)
+            act_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             act_layout.setSpacing(6)
 
             finding_id = f["id"]
             if f.get("status") != "masked":
                 mask_btn = QPushButton("🔒 Mask & Isolate")
+                mask_btn.setFixedHeight(28)
+                mask_btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 mask_btn.setStyleSheet(f"""
                     QPushButton {{
                         background-color: #064E3B;
                         color: #34D399;
-                        border: 1px solid #10B98155;
+                        border: 1px solid #10B981;
                         border-radius: 6px;
-                        padding: 3px 8px;
+                        padding: 3px 10px;
                         font-size: 11px;
-                        font-weight: 600;
+                        font-weight: 700;
                     }}
                     QPushButton:hover {{
                         background-color: #10B981;
@@ -263,17 +289,21 @@ class AlertsView(QWidget):
                 act_layout.addWidget(mask_btn)
 
             ignore_btn = QPushButton("Ignore")
+            ignore_btn.setFixedHeight(28)
+            ignore_btn.setCursor(Qt.CursorShape.PointingHandCursor)
             ignore_btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: #1E293B;
-                    color: {TEXT_MUTED};
-                    border: 1px solid {BORDER_COLOR};
+                    background-color: #24334C;
+                    color: #E2E8F0;
+                    border: 1px solid #3B527E;
                     border-radius: 6px;
-                    padding: 3px 8px;
+                    padding: 4px 10px;
                     font-size: 11px;
+                    font-weight: 600;
                 }}
                 QPushButton:hover {{
-                    color: {TEXT_PRIMARY};
+                    background-color: #334566;
+                    color: #FFFFFF;
                 }}
             """)
             ignore_btn.clicked.connect(lambda _, f_id=finding_id: self.handle_ignore_finding(f_id))

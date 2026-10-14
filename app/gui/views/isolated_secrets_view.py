@@ -49,6 +49,20 @@ class IsolatedSecretsView(QWidget):
         header.addStretch()
 
         self.refresh_btn = QPushButton("🔄 Refresh Vault")
+        self.refresh_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: #1E2E4A;
+                color: #FFFFFF;
+                border: 1px solid #3B527E;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: 700;
+            }}
+            QPushButton:hover {{
+                background-color: #2A3F66;
+                border-color: {ACCENT_BLUE};
+            }}
+        """)
         self.refresh_btn.clicked.connect(self.load_vault)
         header.addWidget(self.refresh_btn)
         layout.addLayout(header)
@@ -90,10 +104,14 @@ class IsolatedSecretsView(QWidget):
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(5, 115)
         self.table.horizontalHeader().setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)
-        self.table.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(7, 180)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(44)
+        self.table.verticalHeader().setMinimumSectionSize(38)
         self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -107,6 +125,7 @@ class IsolatedSecretsView(QWidget):
         self.table.setRowCount(len(records))
 
         for row_idx, item in enumerate(records):
+            self.table.setRowHeight(row_idx, 44)
             iso_id = item["id"]
 
             # ID
@@ -143,7 +162,8 @@ class IsolatedSecretsView(QWidget):
             badge = StatusBadge(st)
             b_box = QWidget()
             bl = QHBoxLayout(b_box)
-            bl.setContentsMargins(4, 2, 4, 2)
+            bl.setContentsMargins(0, 0, 0, 0)
+            bl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             bl.addWidget(badge)
             self.table.setCellWidget(row_idx, 5, b_box)
 
@@ -157,20 +177,23 @@ class IsolatedSecretsView(QWidget):
             # Actions Box
             act_box = QWidget()
             al = QHBoxLayout(act_box)
-            al.setContentsMargins(2, 2, 2, 2)
+            al.setContentsMargins(0, 0, 0, 0)
+            al.setAlignment(Qt.AlignmentFlag.AlignCenter)
             al.setSpacing(6)
 
             if st == "masked":
                 rb_btn = QPushButton("Rollback")
+                rb_btn.setFixedHeight(28)
+                rb_btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 rb_btn.setStyleSheet(f"""
                     QPushButton {{
                         background-color: #78350F;
                         color: #FBBF24;
-                        border: 1px solid #F59E0B55;
+                        border: 1px solid #F59E0B;
                         border-radius: 6px;
-                        padding: 3px 8px;
+                        padding: 3px 12px;
                         font-size: 11px;
-                        font-weight: 600;
+                        font-weight: 700;
                     }}
                     QPushButton:hover {{
                         background-color: #F59E0B;
@@ -183,15 +206,17 @@ class IsolatedSecretsView(QWidget):
             dec_btn = QPushButton("Inspect")
             dec_btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: #1E293B;
-                    color: {TEXT_SECONDARY};
-                    border: 1px solid {BORDER_COLOR};
+                    background-color: #24334C;
+                    color: #E2E8F0;
+                    border: 1px solid #3B527E;
                     border-radius: 6px;
-                    padding: 3px 8px;
+                    padding: 4px 10px;
                     font-size: 11px;
+                    font-weight: 600;
                 }}
                 QPushButton:hover {{
-                    color: {TEXT_PRIMARY};
+                    background-color: #334566;
+                    color: #FFFFFF;
                 }}
             """)
             dec_btn.clicked.connect(lambda _, i_id=iso_id: self.handle_inspect(i_id))

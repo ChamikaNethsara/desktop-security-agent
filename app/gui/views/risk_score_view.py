@@ -68,10 +68,24 @@ class RiskScoreView(QWidget):
         lbl.setStyleSheet(f"color: {TEXT_PRIMARY}; font-weight: 600;")
         cc_layout.addWidget(lbl)
 
-        self.path_edit = QLineEdit(str(self.bridge.project_root / "test_configs" / "vulnerable"))
+        self.path_edit = QLineEdit(str(self.bridge.current_target_dir))
         cc_layout.addWidget(self.path_edit, stretch=1)
 
         browse_btn = QPushButton("📁 Browse...")
+        browse_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: #1E2E4A;
+                color: #FFFFFF;
+                border: 1px solid #3B527E;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: 700;
+            }}
+            QPushButton:hover {{
+                background-color: #2A3F66;
+                border-color: {ACCENT_BLUE};
+            }}
+        """)
         browse_btn.clicked.connect(self.browse_directory)
         cc_layout.addWidget(browse_btn)
 
@@ -80,13 +94,14 @@ class RiskScoreView(QWidget):
             QPushButton {{
                 background-color: {ACCENT_BLUE};
                 color: #FFFFFF;
-                border: none;
+                border: 1px solid #38BDF8;
                 border-radius: 8px;
                 font-weight: 700;
-                padding: 8px 18px;
+                padding: 8px 20px;
             }}
             QPushButton:hover {{
-                background-color: #0070D8;
+                background-color: #006ED3;
+                border-color: #60A5FA;
             }}
         """)
         run_btn.clicked.connect(self.run_audit)
@@ -124,15 +139,35 @@ class RiskScoreView(QWidget):
         pc_layout.addWidget(pc_lbl)
 
         btn_row = QHBoxLayout()
+        preset_style = f"""
+            QPushButton {{
+                background-color: #1E2D48;
+                color: #FFFFFF;
+                border: 1px solid #384F78;
+                border-radius: 6px;
+                padding: 7px 12px;
+                font-weight: 600;
+                font-size: 11px;
+            }}
+            QPushButton:hover {{
+                background-color: #283C66;
+                border-color: {ACCENT_BLUE};
+                color: #FFFFFF;
+            }}
+        """
+
         vuln_btn = QPushButton("Scan Vulnerable Test Configs")
+        vuln_btn.setStyleSheet(preset_style)
         vuln_btn.clicked.connect(lambda: self.scan_preset("test_configs/vulnerable"))
         btn_row.addWidget(vuln_btn)
 
         safe_btn = QPushButton("Scan Safe Test Configs")
+        safe_btn.setStyleSheet(preset_style)
         safe_btn.clicked.connect(lambda: self.scan_preset("test_configs/safe"))
         btn_row.addWidget(safe_btn)
 
         all_btn = QPushButton("Scan Entire Repository")
+        all_btn.setStyleSheet(preset_style)
         all_btn.clicked.connect(lambda: self.scan_preset("."))
         btn_row.addWidget(all_btn)
         pc_layout.addLayout(btn_row)
@@ -144,12 +179,15 @@ class RiskScoreView(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(5)
         self.table.setHorizontalHeaderLabels(["Severity", "Rule ID", "Title / Risk Issue", "Target File", "Recommendation"])
-        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
+        self.table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        self.table.setColumnWidth(0, 110)
         self.table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
         self.table.horizontalHeader().setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)
         self.table.horizontalHeader().setSectionResizeMode(4, QHeaderView.ResizeMode.Stretch)
         self.table.verticalHeader().setVisible(False)
+        self.table.verticalHeader().setDefaultSectionSize(42)
+        self.table.verticalHeader().setMinimumSectionSize(36)
         self.table.setShowGrid(False)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
@@ -190,6 +228,7 @@ class RiskScoreView(QWidget):
 
         self.table.setRowCount(len(findings))
         for row_idx, f in enumerate(findings):
+            self.table.setRowHeight(row_idx, 42)
             sev = getattr(f, "severity", "High")
             rule_id = getattr(f, "rule_id", "CFG-???")
             title = getattr(f, "title", "Configuration Risk")
@@ -200,7 +239,8 @@ class RiskScoreView(QWidget):
             badge = SeverityBadge(sev)
             b_box = QWidget()
             bl = QHBoxLayout(b_box)
-            bl.setContentsMargins(4, 2, 4, 2)
+            bl.setContentsMargins(0, 0, 0, 0)
+            bl.setAlignment(Qt.AlignmentFlag.AlignCenter)
             bl.addWidget(badge)
             self.table.setCellWidget(row_idx, 0, b_box)
 
