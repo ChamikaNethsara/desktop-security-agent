@@ -146,8 +146,9 @@ BUILT_IN_PATTERNS: tuple[SecretPattern, ...] = (
         provider=None,
         regex=(
             r"(?i)\b"
-            r"[A-Za-z_][A-Za-z0-9_]*"
+            r"(?:[A-Za-z0-9_]*)"
             r"(?:password|passwd|pwd)"
+            r"(?:[A-Za-z0-9_]*)"
             r"\s*"
             r"[:=]"
             r"\s*"
