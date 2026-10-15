@@ -141,47 +141,12 @@ python -m pip install -r requirements-dev.txt
 This installs the runtime dependencies from `requirements.txt`, together with the testing and packaging tools listed in `requirements-dev.txt`.
 
 ### 6. Run the application
-The application supports two execution modes:
 
-- **Static Configuration Risk Auditor (default):** Scans a target project directories for configuration security issues.
-- **Real-Time Desktop Security Agent (`--watch`):** Monitors a target project directories for file changes and processes detected events.
-
-Run the commands below from the project root with your virtual environment activated.
-
-#### Option 1 — Run the Configuration Risk Auditor
-
-Scan a project directory and display the audit report.
-
-*PowerShell:*
-
-```powershell
-python -m app.main "C:\path\to\target-project"
-```
-
-*Git Bash:*
+From the project root:
 
 ```bash
-python -m app.main "/c/path/to/target-project"
+python -m run_dashboard
 ```
-
-#### Option 2 — Run the Real-Time Security Agent
-
-Start continuous monitoring of a target project directory.
-
-*PowerShell:*
-
-```powershell
-python -m app.main "C:\path\to\target-project" --watch
-```
-
-*Git Bash:*
-
-```bash
-python -m app.main "/c/path/to/target-project" --watch
-```
-
-The agent will display its running status and monitor the specified directory. Press `Ctrl+C` to stop monitoring.
-
 
 ### 7. Run the tests
 
