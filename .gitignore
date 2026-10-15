@@ -68,3 +68,7 @@ temp/
 # Security-sensitive test output
 test_output/
 scan_results/
+
+# Generated reports
+/reports/*
+!/reports/.gitkeep
