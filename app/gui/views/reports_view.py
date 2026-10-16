@@ -199,6 +199,14 @@ class ReportsView(QWidget):
             self.out_edit.setText(file_path)
 
     def generate_pdf(self):
+        if self.bridge.current_target_dir is None:
+            QMessageBox.information(
+                self,
+                "Select a Project",
+                "Choose a project directory from the Dashboard before generating a report.",
+            )
+            return
+
         out_path_str = self.out_edit.text().strip()
         if not out_path_str:
             QMessageBox.warning(self, "Invalid Path", "Please provide a destination PDF file path.")

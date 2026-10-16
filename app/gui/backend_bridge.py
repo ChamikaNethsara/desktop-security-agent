@@ -96,19 +96,23 @@ class BackendBridge(QObject):
     def __init__(self, project_root: Optional[Path] = None, parent=None):
         super().__init__(parent)
 
-        self.project_root = (
-            Path(project_root).resolve()
+        # Keep resource paths separate from the user's selected scan target.
+        # project_root remains an alias for compatibility with existing callers.
+        self.resource_root = application_root()
+        self.project_root = self.resource_root
+        self.current_target_dir = (
+            Path(project_root).expanduser().resolve()
             if project_root is not None
-            else application_root()
+            else None
         )
 
         # Bundled resources are read-only. The editable YAML rules and all
         # mutable runtime data belong in the current user's data directory.
         self.pattern_rules_path = config_file_path(
-            "pattern_rules.yaml", resource_root=self.project_root
+            "pattern_rules.yaml", resource_root=self.resource_root
         )
         self.file_rules_path = config_file_path(
-            "file_rules.yaml", resource_root=self.project_root
+            "file_rules.yaml", resource_root=self.resource_root
         )
         self.config_dir = self.pattern_rules_path.parent
         self.data_dir = user_data_directory()
@@ -137,7 +141,11 @@ class BackendBridge(QObject):
         self.event_queue = ScanEventQueue()
         self.is_monitoring = False
         self.watcher: Optional[FileWatcher] = None
-        self.monitored_paths: list[Path] = [self.project_root]
+        self.monitored_paths: list[Path] = (
+            [self.current_target_dir]
+            if self.current_target_dir is not None
+            else []
+        )
         self._monitoring_thread: Optional[MonitoringWorker] = None
 
         # Debouncer for live filesystem events (coalesces rapid OS write events)
@@ -146,8 +154,8 @@ class BackendBridge(QObject):
             delay_seconds=0.25,
         )
 
-        # Current target directory: defaults to the project root itself for actual live monitoring
-        self.current_target_dir = self.project_root
+        # A scan target is only set when explicitly supplied or selected in the GUI.
+        # Never scan or monitor the bundled application directory automatically.
 
         # Scan state
         self.last_scanned_files_count = 0
@@ -155,9 +163,13 @@ class BackendBridge(QObject):
         self.last_risk_score: float = 100.0
         self.last_risk_category: str = "Excellent"
 
-        # Run initial scan & start real-time monitoring
-        self.scan_target_project(self.current_target_dir)
-        self.start_monitoring(self.current_target_dir)
+        if self.current_target_dir is not None:
+            if not self.current_target_dir.is_dir():
+                raise NotADirectoryError(
+                    f"Scan target is not a directory: {self.current_target_dir}"
+                )
+            self.scan_target_project(self.current_target_dir)
+            self.start_monitoring(self.current_target_dir)
 
     def _count_eligible_files(self, target: Path) -> int:
         """Counts eligible files in target path according to file filtering rules."""
@@ -180,8 +192,10 @@ class BackendBridge(QObject):
         return count
 
     def set_target_directory(self, target: Path):
-        """Sets new target directory, rescans, and updates watcher if monitoring."""
-        target_path = Path(target).resolve()
+        """Set an explicitly selected project directory and scan it."""
+        target_path = Path(target).expanduser().resolve()
+        if not target_path.is_dir():
+            raise NotADirectoryError(f"Scan target is not a directory: {target_path}")
         self.current_target_dir = target_path
         self.monitored_paths = [target_path]
         if self.is_monitoring:
@@ -195,8 +209,14 @@ class BackendBridge(QObject):
     # ------------------------------------------------------------------ #
 
     def scan_target_project(self, target_directory: Optional[Path] = None) -> dict[str, Any]:
-        """Discovers real eligible files, runs regex+entropy secret detection, and runs configuration auditor."""
-        target = Path(target_directory or self.current_target_dir).resolve()
+        """Scan the explicitly selected project for secrets and configuration risks."""
+        candidate = target_directory if target_directory is not None else self.current_target_dir
+        if candidate is None:
+            raise ValueError("Select a project directory before scanning.")
+
+        target = Path(candidate).expanduser().resolve()
+        if not target.is_dir():
+            raise NotADirectoryError(f"Scan target is not a directory: {target}")
         self.current_target_dir = target
 
         # 1. Discover all eligible files
@@ -273,6 +293,27 @@ class BackendBridge(QObject):
         self.refresh_stats()
         return result
 
+    def run_configuration_audit(self, target_path: Path) -> dict[str, Any]:
+        """Audit configuration files without changing the active scan target."""
+        target = Path(target_path).expanduser().resolve()
+        if not target.is_dir():
+            raise NotADirectoryError(f"Audit target is not a directory: {target}")
+
+        findings = self.auditor.audit_project(target)
+        score = calculate_risk_score(findings)
+        category = get_risk_category(score)
+        result = {
+            "findings": findings,
+            "risk_score": score,
+            "risk_category": category,
+            "target_path": str(target),
+            "findings_count": len(findings),
+        }
+        # Emit for the risk-audit view, but do not overwrite the active project's
+        # dashboard/report state when a bundled demo preset is audited.
+        self.audit_completed.emit(result)
+        return result
+
     def run_project_audit(self, target_path: Path) -> dict[str, Any]:
         """Runs audit and scan on project path."""
         res = self.scan_target_project(target_path)
@@ -332,7 +373,11 @@ class BackendBridge(QObject):
         bar_values = [self.last_scanned_files_count if d == days_labels[-1] else max(0, line_values[i] * 2) for i, d in enumerate(days_labels)]
 
         return {
-            "target_directory": str(self.current_target_dir),
+            "target_directory": (
+                str(self.current_target_dir)
+                if self.current_target_dir is not None
+                else "No project selected — choose Change Folder..."
+            ),
             "files_scanned": self.last_scanned_files_count,
             "secrets_detected": total_secrets,
             "isolated_secrets": isolated_count,
@@ -374,7 +419,13 @@ class BackendBridge(QObject):
             return True
 
     def start_monitoring(self, target_directory: Optional[Path] = None):
-        target = Path(target_directory or self.current_target_dir).resolve()
+        candidate = target_directory if target_directory is not None else self.current_target_dir
+        if candidate is None:
+            raise ValueError("Select a project directory before monitoring.")
+
+        target = Path(candidate).expanduser().resolve()
+        if not target.is_dir():
+            raise NotADirectoryError(f"Monitoring target is not a directory: {target}")
         self.current_target_dir = target
         self.monitored_paths = [target]
 

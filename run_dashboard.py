@@ -13,10 +13,15 @@ ROOT = Path(__file__).resolve().parent
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-# Load local environment configuration before importing application modules.
-from dotenv import load_dotenv
+# Load local environment configuration in development when python-dotenv is installed.
+# The packaged application must also work without this optional development dependency.
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
-load_dotenv(ROOT / ".env")
+if load_dotenv is not None:
+    load_dotenv(ROOT / ".env")
 
 from PySide6.QtWidgets import QApplication
 from app.gui.main_window import MainWindow

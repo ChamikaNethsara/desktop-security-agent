@@ -18,6 +18,11 @@ def application_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def resource_path(*parts: str) -> Path:
+    """Resolve a path relative to the application resource directory."""
+    return application_root().joinpath(*parts)
+
+
 def user_data_directory() -> Path:
     """Return the writable application data directory."""
     if os.environ.get("APP_ENV", "").lower() == "development":

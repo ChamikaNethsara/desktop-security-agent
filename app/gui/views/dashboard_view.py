@@ -545,8 +545,13 @@ class DashboardView(QWidget):
         p_lbl.setStyleSheet(f"color: {TEXT_PRIMARY}; font-size: 13px; font-weight: 700;")
         pb_layout.addWidget(p_lbl)
 
-        self.project_path_lbl = QLabel(str(self.bridge.current_target_dir))
-        self.project_path_lbl.setToolTip(str(self.bridge.current_target_dir))
+        initial_target = (
+            str(self.bridge.current_target_dir)
+            if self.bridge.current_target_dir is not None
+            else "No project selected — choose Change Folder..."
+        )
+        self.project_path_lbl = QLabel(initial_target)
+        self.project_path_lbl.setToolTip(initial_target)
         self.project_path_lbl.setStyleSheet(f"color: {ACCENT_BLUE}; font-family: Consolas; font-size: 12px; font-weight: 600;")
         pb_layout.addWidget(self.project_path_lbl, stretch=1)
 
@@ -766,19 +771,34 @@ class DashboardView(QWidget):
             self.bot_grid.setColumnStretch(2, 0)
 
     def choose_target_folder(self):
-        folder = QFileDialog.getExistingDirectory(self, "Select Project Folder to Scan", str(self.bridge.current_target_dir))
+        start_directory = str(self.bridge.current_target_dir or Path.home())
+        folder = QFileDialog.getExistingDirectory(
+            self, "Select Project Folder to Scan", start_directory
+        )
         if folder:
             self.project_path_lbl.setText(folder)
             self.bridge.set_target_directory(Path(folder))
 
     def scan_current_project(self):
+        if self.bridge.current_target_dir is None:
+            self.choose_target_folder()
+            return
         self.bridge.scan_target_project(self.bridge.current_target_dir)
 
     def _toggle_monitoring(self):
+        if self.bridge.current_target_dir is None:
+            self.choose_target_folder()
+            return
         self.bridge.toggle_monitoring(self.bridge.current_target_dir)
 
     def refresh_dashboard(self, data: dict):
-        self.project_path_lbl.setText(data.get("target_directory", str(self.bridge.current_target_dir)))
+        target_label = data.get("target_directory") or (
+            str(self.bridge.current_target_dir)
+            if self.bridge.current_target_dir is not None
+            else "No project selected — choose Change Folder..."
+        )
+        self.project_path_lbl.setText(target_label)
+        self.project_path_lbl.setToolTip(target_label)
 
         # Actual data updates
         files_scanned = data.get("files_scanned", 0)

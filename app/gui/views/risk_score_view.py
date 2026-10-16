@@ -22,6 +22,7 @@ from app.gui.theme import (
     ACCENT_BLUE, COLOR_GREEN, COLOR_RED, COLOR_YELLOW, COLOR_CYAN
 )
 from app.gui.components.badge import SeverityBadge, StatusBadge
+from app.paths import resource_path
 
 if TYPE_CHECKING:
     from app.gui.backend_bridge import BackendBridge
@@ -68,7 +69,11 @@ class RiskScoreView(QWidget):
         lbl.setStyleSheet(f"color: {TEXT_PRIMARY}; font-weight: 600;")
         cc_layout.addWidget(lbl)
 
-        self.path_edit = QLineEdit(str(self.bridge.current_target_dir))
+        self.path_edit = QLineEdit(
+            str(self.bridge.current_target_dir)
+            if self.bridge.current_target_dir is not None
+            else ""
+        )
         cc_layout.addWidget(self.path_edit, stretch=1)
 
         browse_btn = QPushButton("📁 Browse...")
@@ -158,17 +163,17 @@ class RiskScoreView(QWidget):
 
         vuln_btn = QPushButton("Scan Vulnerable Test Configs")
         vuln_btn.setStyleSheet(preset_style)
-        vuln_btn.clicked.connect(lambda: self.scan_preset("test_configs/vulnerable"))
+        vuln_btn.clicked.connect(lambda: self.scan_preset("vulnerable"))
         btn_row.addWidget(vuln_btn)
 
         safe_btn = QPushButton("Scan Safe Test Configs")
         safe_btn.setStyleSheet(preset_style)
-        safe_btn.clicked.connect(lambda: self.scan_preset("test_configs/safe"))
+        safe_btn.clicked.connect(lambda: self.scan_preset("safe"))
         btn_row.addWidget(safe_btn)
 
         all_btn = QPushButton("Scan Entire Repository")
         all_btn.setStyleSheet(preset_style)
-        all_btn.clicked.connect(lambda: self.scan_preset("."))
+        all_btn.clicked.connect(self.run_audit)
         btn_row.addWidget(all_btn)
         pc_layout.addLayout(btn_row)
         score_row.addWidget(presets_card, stretch=2)
@@ -197,26 +202,57 @@ class RiskScoreView(QWidget):
         # Connect bridge signal
         self.bridge.audit_completed.connect(self.display_audit_result)
 
-        # Run initial audit on test_configs/vulnerable
-        self.run_audit()
+        # Do not audit any directory automatically when this view opens.
 
     def browse_directory(self):
-        dir_path = QFileDialog.getExistingDirectory(self, "Select Project Directory to Audit", str(self.bridge.project_root))
+        start_directory = str(self.bridge.current_target_dir or Path.home())
+        dir_path = QFileDialog.getExistingDirectory(
+            self, "Select Project Directory to Audit", start_directory
+        )
         if dir_path:
             self.path_edit.setText(dir_path)
 
-    def scan_preset(self, rel_path: str):
-        target = self.bridge.project_root / rel_path
+    def scan_preset(self, preset_name: str):
+        if preset_name not in {"vulnerable", "safe"}:
+            QMessageBox.warning(
+                self,
+                "Invalid Preset",
+                "The selected test preset is not supported.",
+            )
+            return
+
+        target = resource_path("test_configs", preset_name)
+        if not target.is_dir():
+            QMessageBox.warning(
+                self,
+                "Preset Not Found",
+                f"The bundled test preset could not be found:\n{target}",
+            )
+            return
+
         self.path_edit.setText(str(target))
         self.run_audit()
 
     def run_audit(self):
         target_str = self.path_edit.text().strip()
-        target = Path(target_str).expanduser().resolve()
-        if not target.exists():
-            QMessageBox.warning(self, "Directory Not Found", f"Directory does not exist:\n{target}")
+        if not target_str:
+            QMessageBox.information(
+                self,
+                "Select a Project",
+                "Choose a project directory before running an audit.",
+            )
             return
-        self.bridge.run_project_audit(target)
+
+        target = Path(target_str).expanduser().resolve()
+        if not target.is_dir():
+            QMessageBox.warning(
+                self,
+                "Directory Not Found",
+                f"Please select an existing directory:\n{target}",
+            )
+            return
+
+        self.bridge.run_configuration_audit(target)
 
     def display_audit_result(self, res: dict):
         score = res.get("risk_score", 100.0)
