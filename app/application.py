@@ -4,6 +4,11 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from app.paths import (
+    config_file_path,
+    database_path,
+    secrets_database_path,
+)
 from config.default_config import DEBOUNCE_DELAY_SECONDS
 from config.rule_loader import RuleLoader
 
@@ -67,21 +72,13 @@ class SecurityAgentApplication:
 
         self._event_queue = ScanEventQueue()
 
-        application_root = Path(__file__).resolve().parent.parent
-
         # --------------------------------------------------
         # Configuration
         # --------------------------------------------------
-
-        config_directory = application_root / "config"
-
-        pattern_rules_path = (
-            config_directory / "pattern_rules.yaml"
-        )
-
-        file_rules_path = (
-            config_directory / "file_rules.yaml"
-        )
+        # Bundled defaults are copied to the per-user config directory so the
+        # Settings page can edit rules even when installed under Program Files.
+        pattern_rules_path = config_file_path("pattern_rules.yaml")
+        file_rules_path = config_file_path("file_rules.yaml")
 
         self._file_scan_config = (
             RuleLoader(file_rules_path).load_file_rules()
@@ -146,26 +143,12 @@ class SecurityAgentApplication:
         # SQLite event storage
         # --------------------------------------------------
 
-        database_path = (
-            application_root / "data" / "security_agent.db"
-        )
+        # Runtime databases must live in a writable per-user location, not
+        # beside the installed executable or bundled read-only resources.
+        self._event_store = SQLiteEventStore(database_path=database_path())
 
-        database_path.parent.mkdir(
-            parents=True,
-            exist_ok=True
-        )
-
-        self._event_store = SQLiteEventStore(
-            database_path=database_path
-        )
-
-        # Component 2 — encrypted findings DB
-        component2_db_path = (
-            application_root / "data" / "adsa_secrets.db"
-        )
-        self._secret_db = SecretDatabase(
-            db_path=str(component2_db_path)
-        )
+        # Component 2 — encrypted findings DB, stored alongside the main DB.
+        self._secret_db = SecretDatabase(db_path=str(secrets_database_path()))
 
         # --------------------------------------------------
         # Static Configuration Risk Auditor

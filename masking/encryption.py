@@ -48,6 +48,8 @@ from typing import Final, Optional
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 from cryptography.exceptions import InvalidTag
 
+from app.paths import key_file_path
+
 logger = logging.getLogger("adsa.storage.encryption")
 
 # --------------------------------------------------------------------------- #
@@ -62,8 +64,8 @@ _KEYRING_SERVICE_NAME: Final[str] = "ADSA-SecretVault"
 _KEYRING_USERNAME: Final[str] = "adsa-master-key"
 
 # Fallback on-disk location if no OS keyring backend is usable.
-_DEFAULT_KEY_DIR: Final[Path] = Path.home() / ".adsa" / "keys"
-_DEFAULT_KEY_FILE: Final[Path] = _DEFAULT_KEY_DIR / "master.key"
+_DEFAULT_KEY_FILE: Final[Path] = key_file_path()
+_DEFAULT_KEY_DIR: Final[Path] = _DEFAULT_KEY_FILE.parent
 
 
 # --------------------------------------------------------------------------- #
@@ -179,7 +181,9 @@ class _KeyStore:
     # -- file backend ----------------------------------------------------#
 
     def _load_or_create_file_key(self) -> bytes:
-        key_path = Path(os.environ.get("ADSA_KEY_FILE_PATH", str(_DEFAULT_KEY_FILE)))
+        key_path = Path(
+            os.environ.get("ADSA_KEY_FILE_PATH", str(_DEFAULT_KEY_FILE))
+        ).expanduser().resolve()
 
         try:
             if key_path.exists():

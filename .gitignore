@@ -31,6 +31,8 @@ Desktop.ini
 logs/
 
 # Databases and runtime data
+*.key
+*.bak.enc
 *.db
 *.sqlite
 *.sqlite3
@@ -72,3 +74,6 @@ scan_results/
 # Generated reports
 /reports/*
 !/reports/.gitkeep
+
+# patch
+patches

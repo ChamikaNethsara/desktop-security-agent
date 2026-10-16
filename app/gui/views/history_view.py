@@ -6,6 +6,8 @@ Full chronological audit trail of detections, masking events, and audits.
 from __future__ import annotations
 import csv
 from pathlib import Path
+
+from app.paths import reports_directory
 from typing import TYPE_CHECKING
 
 from PySide6.QtWidgets import (
@@ -148,7 +150,13 @@ class HistoryView(QWidget):
             self.table.setCellWidget(row_idx, 5, st_box)
 
     def export_csv(self):
-        file_path, _ = QFileDialog.getSaveFileName(self, "Export History to CSV", "security_history.csv", "CSV Files (*.csv)")
+        default_csv = reports_directory() / "security_history.csv"
+        file_path, _ = QFileDialog.getSaveFileName(
+            self,
+            "Export History to CSV",
+            str(default_csv),
+            "CSV Files (*.csv)",
+        )
         if not file_path:
             return
 

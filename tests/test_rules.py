@@ -1,9 +1,13 @@
+from pathlib import Path
+
 from auditor.auditor import ConfigurationAuditor
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_vulnerable_configuration_generates_findings():
     auditor = ConfigurationAuditor()
-    findings = auditor.audit_project("test_configs/vulnerable")
+    findings = auditor.audit_project(PROJECT_ROOT / "test_configs" / "vulnerable")
 
     rule_ids = {finding.rule_id for finding in findings}
 

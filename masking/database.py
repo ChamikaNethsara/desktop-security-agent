@@ -61,11 +61,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterator, List, Optional
 
+from app.paths import secrets_database_path
 from masking.encryption import decrypt_secret, encrypt_secret, DecryptionError, EncryptionError
 
 logger = logging.getLogger("adsa.storage.database")
 
-_DEFAULT_DB_PATH = Path.home() / ".adsa" / "data" / "adsa.db"
+_DEFAULT_DB_PATH = secrets_database_path()
 
 
 # --------------------------------------------------------------------------- #
@@ -216,7 +217,8 @@ class SecretDatabase:
     """
 
     def __init__(self, db_path: Optional[str] = None) -> None:
-        self.db_path = Path(db_path or os.environ.get("ADSA_DB_PATH", str(_DEFAULT_DB_PATH)))
+        configured_path = db_path or os.environ.get("ADSA_DB_PATH") or str(_DEFAULT_DB_PATH)
+        self.db_path = Path(configured_path).expanduser().resolve()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
 
         self._lock = threading.RLock()

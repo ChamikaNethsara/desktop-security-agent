@@ -56,6 +56,7 @@ from typing import Final, List, Optional
 
 import yaml
 
+from app.paths import backup_directory
 from masking.encryption import decrypt_secret, encrypt_secret, DecryptionError, EncryptionError
 
 logger = logging.getLogger("adsa.storage.masker")
@@ -63,8 +64,8 @@ logger = logging.getLogger("adsa.storage.masker")
 _REDACTED: Final[str] = "[REDACTED]"
 
 _BACKUP_DIR: Final[Path] = Path(
-    os.environ.get("ADSA_BACKUP_DIR", str(Path.home() / ".adsa" / "backups"))
-)
+    os.environ.get("ADSA_BACKUP_DIR", str(backup_directory()))
+).expanduser().resolve()
 _MANIFEST_PATH: Final[Path] = _BACKUP_DIR / "manifest.json"
 
 

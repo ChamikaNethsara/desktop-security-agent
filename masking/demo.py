@@ -12,8 +12,8 @@ Usage:
 import os
 import tempfile
 
-# Use a throwaway temp directory for the key/backup/db files so this demo
-# never touches your real ~/.adsa folder.
+# Use a throwaway temp directory for key/backup/database files so this demo
+# never touches the application's normal per-user data directory.
 DEMO_DIR = tempfile.mkdtemp(prefix="adsa_demo_")
 os.environ["ADSA_KEY_BACKEND"] = "file"
 os.environ["ADSA_KEY_FILE_PATH"] = os.path.join(DEMO_DIR, "master.key")

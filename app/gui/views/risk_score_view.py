@@ -212,7 +212,7 @@ class RiskScoreView(QWidget):
 
     def run_audit(self):
         target_str = self.path_edit.text().strip()
-        target = Path(target_str)
+        target = Path(target_str).expanduser().resolve()
         if not target.exists():
             QMessageBox.warning(self, "Directory Not Found", f"Directory does not exist:\n{target}")
             return

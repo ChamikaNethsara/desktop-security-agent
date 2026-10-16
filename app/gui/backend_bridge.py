@@ -15,6 +15,13 @@ from typing import Any, Optional
 
 from PySide6.QtCore import QObject, Signal, QThread
 
+from app.paths import (
+    application_root,
+    config_file_path,
+    database_path,
+    secrets_database_path,
+    user_data_directory,
+)
 from config.rule_loader import RuleLoader
 from scanner.debouncer import EventDebouncer
 from scanner.scan_config import FileScanConfig
@@ -89,21 +96,26 @@ class BackendBridge(QObject):
     def __init__(self, project_root: Optional[Path] = None, parent=None):
         super().__init__(parent)
 
-        if project_root is None:
-            self.project_root = Path(__file__).resolve().parent.parent.parent
-        else:
-            self.project_root = Path(project_root).resolve()
+        self.project_root = (
+            Path(project_root).resolve()
+            if project_root is not None
+            else application_root()
+        )
 
-        self.config_dir = self.project_root / "config"
-        self.data_dir = self.project_root / "data"
-        self.data_dir.mkdir(parents=True, exist_ok=True)
+        # Bundled resources are read-only. The editable YAML rules and all
+        # mutable runtime data belong in the current user's data directory.
+        self.pattern_rules_path = config_file_path(
+            "pattern_rules.yaml", resource_root=self.project_root
+        )
+        self.file_rules_path = config_file_path(
+            "file_rules.yaml", resource_root=self.project_root
+        )
+        self.config_dir = self.pattern_rules_path.parent
+        self.data_dir = user_data_directory()
 
-        self.pattern_rules_path = self.config_dir / "pattern_rules.yaml"
-        self.file_rules_path = self.config_dir / "file_rules.yaml"
-
-        # Databases
-        self.event_store_db_path = self.data_dir / "security_agent.db"
-        self.secrets_db_path = self.data_dir / "adsa_secrets.db"
+        # Databases are kept outside the installation directory.
+        self.event_store_db_path = database_path()
+        self.secrets_db_path = secrets_database_path()
 
         self.event_store = SQLiteEventStore(self.event_store_db_path)
         self.secret_db = SecretDatabase(str(self.secrets_db_path))

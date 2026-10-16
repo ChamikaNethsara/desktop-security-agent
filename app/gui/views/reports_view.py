@@ -20,6 +20,7 @@ from app.gui.theme import (
     ACCENT_BLUE, COLOR_GREEN
 )
 from app.gui.pdf_report_generator import PDFReportGenerator
+from app.paths import reports_directory
 
 if TYPE_CHECKING:
     from app.gui.backend_bridge import BackendBridge
@@ -85,7 +86,7 @@ class ReportsView(QWidget):
         out_box = QVBoxLayout()
         out_box.addWidget(QLabel("Export PDF File Path:"))
         out_row = QHBoxLayout()
-        default_pdf = self.bridge.project_root / "reports" / "Security_Audit_Report.pdf"
+        default_pdf = reports_directory() / "Security_Audit_Report.pdf"
         self.out_edit = QLineEdit(str(default_pdf))
         out_row.addWidget(self.out_edit, stretch=1)
 
@@ -219,7 +220,7 @@ class ReportsView(QWidget):
             saved_file = PDFReportGenerator.generate_report(
                 output_path=out_path_str,
                 project_name=self.proj_edit.text().strip(),
-                project_path=str(self.bridge.project_root),
+                project_path=str(self.bridge.current_target_dir),
                 auditor_name=self.auditor_edit.text().strip(),
                 stats={
                     "files_scanned": stats.get("files_scanned", 1284),

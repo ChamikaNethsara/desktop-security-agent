@@ -1,6 +1,8 @@
 from pathlib import Path
 import yaml
 
+from app.paths import config_file_path
+
 
 def discover_files(project_path):
     root = Path(project_path).resolve()
@@ -8,8 +10,8 @@ def discover_files(project_path):
         raise FileNotFoundError(root)
     if not root.is_dir():
         raise NotADirectoryError(root)
-    rules_path = Path(__file__).resolve().parent.parent / 'config' / 'file_rules.yaml'
-    config = yaml.safe_load(rules_path.read_text(encoding='utf-8')) or {}
+    rules_path = config_file_path("file_rules.yaml")
+    config = yaml.safe_load(rules_path.read_text(encoding="utf-8")) or {}
     scan = config.get('file_scanning', config)
     extensions = set(scan.get('included_extensions', scan.get('supported_extensions', [])))
     names = {n.lower() for n in scan.get('included_filenames', scan.get('special_filenames', []))}
