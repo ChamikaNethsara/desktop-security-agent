@@ -158,6 +158,52 @@ python -m pytest
 
 Pytest will discover and run the project's tests and display the results in the terminal.
 
+### Local Application Data and Configuration
+
+The application stores mutable runtime data in a per-user directory rather than the installation directory.
+
+On Windows, the default data directory is `%LOCALAPPDATA%\Desktop Security Agent\`:
+
+```text
+%LOCALAPPDATA%\Desktop Security Agent\
+├── security_agent.db
+├── adsa_secrets.db
+├── config\
+│   ├── file_rules.yaml
+│   └── pattern_rules.yaml
+├── keys\
+│   └── master.key
+├── backups\
+└── reports\
+```
+
+| Path | Description |
+|---|---|
+| `security_agent.db` | Application database |
+| `adsa_secrets.db` | Secrets database |
+| `config/` | User-editable configuration files |
+| `keys/master.key` | Fallback encryption key when the OS keyring is unavailable |
+| `backups/` | Encrypted masking backups and their manifest |
+| `reports/` | Generated PDF and CSV reports |
+
+**Configuration behavior**
+
+- Bundled configuration files provide the default settings. On first use, editable copies are created in the per-user configuration directory.
+- Changes made through the Settings page are stored in the user configuration files and are preserved across application upgrades.
+- Runtime data, databases, backups, reports, and fallback key files are stored outside the installation directory.
+
+**Environment variables**
+
+The following optional environment variables override the corresponding Component 2 paths when configured:
+
+| Variable | Purpose |
+|---|---|
+| `ADSA_DB_PATH` | Overrides the Component 2 database path |
+| `ADSA_KEY_FILE_PATH` | Overrides the fallback encryption key file path |
+| `ADSA_BACKUP_DIR` | Overrides the Component 2 backup directory |
+
+---
+---
 
 ## Technology Stack
 
