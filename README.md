@@ -140,7 +140,36 @@ python -m pip install -r requirements-dev.txt
 
 This installs the runtime dependencies from `requirements.txt`, together with the testing and packaging tools listed in `requirements-dev.txt`.
 
-### 6. Run the application
+### 6. Environment Configuration
+
+The application supports environment-specific storage paths to keep development data separate from production application data.
+
+#### i. Create the environment file
+
+Copy the example environment file to create your local `.env` file:
+
+**PowerShell**
+```powershell
+Copy-Item .env.example .env
+```
+
+The `.env.example` file contains the default development setting:
+
+```dotenv
+APP_ENV=development
+```
+
+#### ii. Configure the application environment
+
+The `APP_ENV` variable controls where writable application data is stored.
+
+| Value | Data location |
+|---|---|
+| `development` | The project's `data/` directory |
+| `production` | The operating system's application data directory |
+
+
+### 7. Run the application
 
 From the project root:
 
@@ -148,7 +177,7 @@ From the project root:
 python -m run_dashboard
 ```
 
-### 7. Run the tests
+### 8. Run the tests
 
 To execute the automated test suite, run:
 

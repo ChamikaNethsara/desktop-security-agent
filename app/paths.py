@@ -19,20 +19,21 @@ def application_root() -> Path:
 
 
 def user_data_directory() -> Path:
-    """Return the per-user writable application data directory."""
-    local_app_data = os.environ.get("LOCALAPPDATA")
-
-    if local_app_data:
-        base_directory = Path(local_app_data)
-    elif os.name == "nt":
-        base_directory = Path.home() / "AppData" / "Local"
+    """Return the writable application data directory."""
+    if os.environ.get("APP_ENV", "").lower() == "development":
+        data_directory = application_root() / "data"
     else:
-        # Keep development and tests usable on non-Windows systems.
-        base_directory = Path(
-            os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local" / "share"))
-        )
+        local_app_data = os.environ.get("LOCALAPPDATA")
 
-    data_directory = base_directory / APP_NAME
+        if local_app_data:
+            base_directory = Path(local_app_data)
+        elif os.name == "nt":
+            base_directory = Path.home() / "AppData" / "Local"
+        else:
+            base_directory = Path(os.environ.get("XDG_DATA_HOME", str(Path.home() / ".local" / "share")))
+
+        data_directory = base_directory / APP_NAME
+
     data_directory.mkdir(parents=True, exist_ok=True)
     return data_directory
 

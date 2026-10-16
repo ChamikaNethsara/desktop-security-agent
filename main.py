@@ -1,15 +1,9 @@
 """
-SecureGuard - Desktop Security Agent
-Main Root Entry Point
-
-Usage:
-    python main.py                  # Launches the Centralized Desktop Dashboard (GUI)
-    python main.py --gui            # Explicitly launches Desktop Dashboard (GUI)
-    python main.py <folder>         # Runs Static Configuration Risk Auditor (CLI)
-    python main.py <folder> --watch # Runs Real-Time File Monitoring Agent (CLI)
+SecureGuard - Desktop Security Agent - Main Entry Point
 """
 
 from __future__ import annotations
+
 import sys
 from pathlib import Path
 
@@ -17,6 +11,15 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parent
 if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
+
+# Load local development settings before importing application modules.
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(PROJECT_ROOT / ".env")
+except ImportError:
+    pass # Production builds can run without python-dotenv.
+
 
 from app.main import main
 

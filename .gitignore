@@ -77,3 +77,7 @@ scan_results/
 
 # patch
 patches
+
+# Local development application data
+/data/*
+!/data/.gitkeep

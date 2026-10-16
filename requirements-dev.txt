@@ -1,6 +1,9 @@
 # Application dependencies
 -r requirements.txt
 
+# Development environment configuration
+python-dotenv
+
 # Testing
 pytest==8.4.2
 
