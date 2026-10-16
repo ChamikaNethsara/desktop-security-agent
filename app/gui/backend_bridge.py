@@ -187,8 +187,8 @@ class BackendBridge(QObject):
         if self.is_monitoring:
             self.stop_monitoring()
             self.start_monitoring(target_path)
-        else:
-            self.scan_target_project(target_path)
+        # Always rescan so UI matches the selected folder
+        self.scan_target_project(target_path)
 
     # ------------------------------------------------------------------ #
     # Real Project Scanning (Actual Data)
@@ -198,6 +198,9 @@ class BackendBridge(QObject):
         """Discovers real eligible files, runs regex+entropy secret detection, and runs configuration auditor."""
         target = Path(target_directory or self.current_target_dir).resolve()
         self.current_target_dir = target
+
+        # Fresh scan for selected folder only (dashboard shows this target's results)
+        self.secret_db.clear_all_findings()
 
         # 1. Discover all eligible files
         filter_engine = FileEligibilityFilter(

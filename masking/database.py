@@ -552,6 +552,12 @@ class SecretDatabase:
     # ----------------------------------------------------------------- #
     # Aggregate stats for the dashboard / risk scoring model
     # ----------------------------------------------------------------- #
+    def clear_all_findings(self) -> None:
+        """Remove all findings, isolations and remediation events (fresh scan)."""
+        with self._cursor() as cur:
+            cur.execute("DELETE FROM remediation_events")
+            cur.execute("DELETE FROM isolated_secrets")
+            cur.execute("DELETE FROM findings")
 
     def get_dashboard_stats(self, recent_limit: int = 10) -> Dict[str, Any]:
         """Aggregate counts consumed by Component 4 (dashboard) and the
