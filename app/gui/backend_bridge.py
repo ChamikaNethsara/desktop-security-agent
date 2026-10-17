@@ -23,6 +23,7 @@ from app.paths import (
     user_data_directory,
 )
 from config.rule_loader import RuleLoader
+from config.rule_store import RuleStore
 from scanner.debouncer import EventDebouncer
 from scanner.scan_config import FileScanConfig
 from scanner.file_filter import FileEligibilityFilter
@@ -111,6 +112,7 @@ class BackendBridge(QObject):
             "file_rules.yaml", resource_root=self.project_root
         )
         self.config_dir = self.pattern_rules_path.parent
+        self.rule_store = RuleStore(self.pattern_rules_path, self.file_rules_path)
         self.data_dir = user_data_directory()
 
         # Databases are kept outside the installation directory.
@@ -548,26 +550,32 @@ class BackendBridge(QObject):
     # Rule Configuration Management
     # ------------------------------------------------------------------ #
 
-    def read_pattern_rules_yaml(self) -> str:
-        if self.pattern_rules_path.exists():
-            return self.pattern_rules_path.read_text(encoding="utf-8")
-        return ""
+    # Rules are edited through RuleStore, which validates every change with the
+    # real loader before touching the YAML files, then the engines are reloaded.
 
-    def save_pattern_rules_yaml(self, content: str):
-        import yaml
-        yaml.safe_load(content)
-        self.pattern_rules_path.write_text(content, encoding="utf-8")
+    def list_pattern_rules(self) -> list[dict[str, Any]]:
+        """All detection rules currently in effect (built-in, overridden and custom)."""
+        return self.rule_store.list_pattern_rules()
+
+    def save_pattern_rule(self, rule: dict[str, Any], original_id: Optional[str] = None) -> None:
+        """Add a new rule (original_id=None) or update an existing one, then reload."""
+        self.rule_store.save_pattern_rule(rule, original_id=original_id)
         self.reload_rules()
 
-    def read_file_rules_yaml(self) -> str:
-        if self.file_rules_path.exists():
-            return self.file_rules_path.read_text(encoding="utf-8")
-        return ""
+    def set_pattern_enabled(self, pattern_id: str, enabled: bool) -> None:
+        self.rule_store.set_pattern_enabled(pattern_id, enabled)
+        self.reload_rules()
 
-    def save_file_rules_yaml(self, content: str):
-        import yaml
-        yaml.safe_load(content)
-        self.file_rules_path.write_text(content, encoding="utf-8")
+    def delete_pattern_rule(self, pattern_id: str) -> None:
+        """Delete a custom rule, or reset a built-in rule to its defaults, then reload."""
+        self.rule_store.delete_pattern_rule(pattern_id)
+        self.reload_rules()
+
+    def get_file_rules(self) -> dict[str, list[str]]:
+        return self.rule_store.read_file_rules()
+
+    def save_file_rules(self, rules: dict[str, list[str]]) -> None:
+        self.rule_store.save_file_rules(rules)
         self.reload_rules()
 
     def reload_rules(self):
