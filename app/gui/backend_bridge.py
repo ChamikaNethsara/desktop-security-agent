@@ -279,15 +279,21 @@ class BackendBridge(QObject):
         return result
 
     def run_project_audit(self, target_path: Path) -> dict[str, Any]:
-        """Runs audit and scan on project path."""
+        """Run configuration audit and update the GUI."""
         res = self.scan_target_project(target_path)
-        return {
-            "findings": res.get("audit_findings", []),
-            "risk_score": res.get("risk_score", 100.0),
-            "risk_category": res.get("risk_category", "Excellent"),
-            "target_path": str(target_path),
-            "findings_count": len(res.get("audit_findings", [])),
+        findings = res.get("audit_findings", [])
+
+        result = {
+        "findings": findings,
+        "risk_score": res.get("risk_score", 100.0),
+        "risk_category": res.get("risk_category", "Excellent"),
+        "target_path": str(target_path),
+        "findings_count": len(findings),
         }
+
+        self.audit_completed.emit(result)
+
+        return result
 
     # ------------------------------------------------------------------ #
     # Dashboard Aggregation (100% Actual Database Data)
