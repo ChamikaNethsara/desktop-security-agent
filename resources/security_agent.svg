@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+  <defs>
+    <!-- Background plate: soft, light, cool gradient (two steps only) -->
+    <linearGradient id="plate" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7FAFF"/>
+      <stop offset="1" stop-color="#D6E2F4"/>
+    </linearGradient>
+    <linearGradient id="plateEdge" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#B9C9E3"/>
+    </linearGradient>
+
+    <!-- Shield rim (outer bevel) -->
+    <linearGradient id="rim" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8FD0FF"/>
+      <stop offset="0.5" stop-color="#2F80ED"/>
+      <stop offset="1" stop-color="#0B3A9E"/>
+    </linearGradient>
+
+    <!-- Shield face: left (light) and right (dark) halves -->
+    <linearGradient id="faceL" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4DB0FF"/>
+      <stop offset="1" stop-color="#1B6BE0"/>
+    </linearGradient>
+    <linearGradient id="faceR" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2B7DEB"/>
+      <stop offset="1" stop-color="#0F44AE"/>
+    </linearGradient>
+
+    <!-- Gloss highlight -->
+    <linearGradient id="gloss" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+
+    <path id="shield" d="M128 46 C150 60 172 67 192 68 V122 C192 165 164 198 128 214 C92 198 64 165 64 122 V68 C84 67 106 60 128 46 Z"/>
+
+    <clipPath id="faceClip">
+      <use href="#shield" transform="translate(128 130) scale(0.84) translate(-128 -130)"/>
+    </clipPath>
+
+    <filter id="plateShadow" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="4" stdDeviation="5" flood-color="#0B2A66" flood-opacity="0.22"/>
+    </filter>
+    <filter id="shieldShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+
+  <g transform="translate(0 -2)">
+    <!-- Background plate -->
+    <rect x="10" y="10" width="236" height="236" rx="54" fill="url(#plate)" filter="url(#plateShadow)"/>
+    <rect x="10.75" y="10.75" width="234.5" height="234.5" rx="53.5" fill="none" stroke="url(#plateEdge)" stroke-width="1.5"/>
+
+    <!-- Soft ground shadow under the shield -->
+    <use href="#shield" fill="#0B2A66" opacity="0.38" filter="url(#shieldShadow)" transform="translate(0 9)"/>
+
+    <!-- Shield rim -->
+    <use href="#shield" fill="url(#rim)"/>
+    <use href="#shield" fill="none" stroke="#0A2F82" stroke-opacity="0.45" stroke-width="1.5"/>
+
+    <!-- Shield face -->
+    <g clip-path="url(#faceClip)">
+      <rect x="40" y="30" width="88" height="200" fill="url(#faceL)"/>
+      <rect x="128" y="30" width="88" height="200" fill="url(#faceR)"/>
+      <!-- Gloss on upper part, following the shield's top shoulders -->
+      <path d="M40 40 H216 V112 C180 128 150 112 128 126 C104 140 70 130 40 114 Z" fill="url(#gloss)" opacity="0.9"/>
+      <!-- Center seam -->
+      <rect x="127.25" y="30" width="1.5" height="200" fill="#FFFFFF" opacity="0.22"/>
+    </g>
+    <!-- Inner edge highlight -->
+    <use href="#shield" transform="translate(128 130) scale(0.84) translate(-128 -130)" fill="none" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="1.5"/>
+  </g>
+</svg>
